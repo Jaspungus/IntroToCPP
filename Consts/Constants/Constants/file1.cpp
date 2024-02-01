@@ -17,12 +17,16 @@ double variance();
 double watts();
 double thrust();
 
+
+
 void counter() {
 	static int i = 0;
 	std::cout << "I have been called " << i << " times before." << std::endl;
 	std::cout << "That makes " << i++ << " times now. Have an extra line of text." << std::endl;
 
 }
+
+
 
 float askForGallons() {
 	
