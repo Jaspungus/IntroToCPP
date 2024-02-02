@@ -139,22 +139,26 @@ void Factorial() {
 void SumMean() {
     int count = 0;
     int sum = 0;
+    bool quitting = false;
     std::string input = "";
-    while (true) {
-        std::cin >> input;
-        
-        if (input == "q") {
-            std::cout << "Quitting." << std::endl;
-            break;
-        }
-
-        int inputNum;
-        if (sscanf_s(input.c_str(), "%d", &inputNum) != 1) 
-        {
-            std::cout << "Not a number. Can't be arsed asking for another." << std::endl;
-            break;
-        }
-        
+    while (!quitting) {
+        bool failed = false;
+        int inputNum = 0;
+        do {
+            std::cin >> input;
+            failed = false;
+            if (input == "q" || input == "Q") {
+                std::cout << "Quitting." << std::endl;
+                quitting = true;
+            }
+            else if (sscanf_s(input.c_str(), "%d", &inputNum) != 1)  
+            {
+                failed = true;
+                std::cout << "Waiter waiter! An actual number please!" << std::endl;
+                std::cin.clear();
+                std::cin.ignore(std::cin.rdbuf()->in_avail());
+            }
+        } while (failed);
 
 
         count++;
