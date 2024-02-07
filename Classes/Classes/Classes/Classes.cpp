@@ -9,6 +9,7 @@ int main() {
 	Circle circle(5);
 	std::cout << circle.CalcArea() << " " << circle.CalcCircum() << std::endl;
 
+
 	return 0;
 }
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
