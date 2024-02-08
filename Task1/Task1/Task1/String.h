@@ -14,15 +14,17 @@ public:
 public:
 	size_t Length() const;
 	char& CharacterAt(size_t index);
-	bool EqualTo(String str);
-	void Append(String str);
+	const char& CharacterAt(size_t index) const;
+	bool EqualTo(const String str);
+	void Append(const String str);
+	
 	void Prepend(String str);
-	const char* CStr();
+	const char* CStr() const;
 	void ToLower();
 	void ToUpper();
-	size_t Find(String findString);
-	size_t Find(int startIndex, String findString);
-	void Replace(String findString, String replaceString);
+	size_t Find(const String findString);
+	size_t Find(int startIndex, const String findString);
+	void Replace(const String findString, const String replaceString);
 	void ReadFromConsole();
 	void WriteToConsole();
 
@@ -36,11 +38,9 @@ public:
 	char& operator[](size_t index);
 	const char& operator[](size_t index) const;
 
-	String& operator+(const String& other);
-	String& operator+(const char&);
+	const String operator+(const String& other) const;
 
 	String& operator+=(const String& other);
-	String& operator+=(const char&);
 
 private:
 	size_t m_length = 1;

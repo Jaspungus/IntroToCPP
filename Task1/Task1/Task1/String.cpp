@@ -1,30 +1,35 @@
 #include "String.h"
 
+//As it turns out, C-String functions are fine, so that means 814 less loops!
+//Heeheehoo hahaho C-String functions make it so neat.
+
 String::String() {
-	m_string[m_length - 1] = '\0';
+	m_string[0] = '\0';
 }
 
+//Working
 String::String(const char* string) {
 	m_length = strlen(string) + 1;
 
 	delete[] m_string;
 	m_string = new char[m_length];
-	for (int i = 0; i < m_length; i++) {
-		m_string[i] = string[i];
-	}
-	m_string[m_length - 1] = '\0';
+	strcpy_s(m_string, m_length, string);
 }
 
+//Working
 String::String(const String& other) {
 	delete[] m_string;
 	m_length = other.Length() + 1;
 	m_string = new char[m_length];
-	for (int i = 0; i < m_length; i++) {
-		m_string[i] = other[i];
-	}
+	strcpy_s(m_string, m_length, other.CStr());
+
+
+	//for (int i = 0; i < m_length; i++) {
+	//	m_string[i] = other[i];
+	//}
 }
 
-
+//Working
 size_t String::Length() const {
 	return strlen(m_string);
 }
@@ -33,59 +38,74 @@ String::~String() {
 	delete[] m_string;
 }
 
+//Working
 char& String::CharacterAt(size_t index) {
-	
-	if (index < m_length || index < 0) { return m_string[index]; }
-	else return m_string[m_length -1];
+	if (index > m_length || index < 0) return m_string[m_length -1];
+	return m_string[index];
 }
+
+//Working
+const char& String::CharacterAt(size_t index) const {
+	if (index > m_length || index < 0) return '\0';
+	return m_string[index];
+}
+
 
 bool String::EqualTo(String str) {
-	for (int i = 0; i < m_length; i++) {
-		if (m_string[i] != str[i]) return false;
-	}
-	return true;
+	return (strcmp(m_string, str.CStr()) == 0);
 }
 
-void String::Append(String str) {
-	char* m_newString = new char[m_length + str.Length()];
-	for (int i = 0; i < Length(); i++) {
-		m_newString[i] = m_string[i];
-	}
-	for (int i = Length(); i < m_length + str.Length(); i++) {
-		m_newString[i] = str[i];
-	}
-	m_newString[Length() + str.Length()] = '\0';
+//Working
+void String::Append(const String str) {
+	size_t newLength = m_length + str.Length();
+	char* m_newString = new char[newLength];
+	m_newString[0] = '\0';
+
+	strcat_s(m_newString, newLength, m_string);
+	strcat_s(m_newString, newLength, str.CStr());
+	
 	delete[] m_string;
-	m_length += str.Length();
-	m_string = m_newString;
+	m_length = newLength;
+	m_string = new char[m_length];
+	strcpy_s(m_string, m_length, m_newString);
+
+	delete[] m_newString;
 }
 
+//Working
 void String::Prepend(String str) {
-	char* m_newString = new char[str.Length() + m_length];
-	for (int i = 0; i < str.Length(); i++) {
-		m_newString[i] = str[i];
-	}
-	for (int i = str.Length(); i < str.Length() + m_length; i++) {
-		m_newString[i] = m_string[i];
-	}
-	delete[] m_string;
-	m_length += str.Length();
-	m_string = m_newString;
-}
 
-const char* String::CStr() {
+	size_t newLength = m_length + str.Length();
+	char* m_newString = new char[newLength];
+	m_newString[0] = '\0';
+
+	strcat_s(m_newString, newLength, str.CStr());
+	strcat_s(m_newString, newLength, m_string);
+
+	delete[] m_string;
+	m_length = newLength;
+	m_string = new char[m_length];
+	strcpy_s(m_string, m_length, m_newString);
+
+	delete[] m_newString;
+}
+//Working
+const char* String::CStr() const {
 	return m_string;
 }
 
+
+//Working
 void String::ToUpper() {	
 	for (int i = 0; i < m_length; i++) {
 		if (97 <= m_string[i] && m_string[i] <= 122) m_string[i] -= 32;
 	}
 }
 
+//Working
 void String::ToLower() {
 	for (int i = 0; i < m_length; i++) {
-		if (97 <= m_string[i] && m_string[i] <= 122) m_string[i] -= 32;
+		if (65 <= m_string[i] && m_string[i] <= 90) m_string[i] += 32;
 	}
 }
 
@@ -119,82 +139,79 @@ void String::Replace(String findString, String replaceString) {
 
 }
 
+//Working
 void String::ReadFromConsole() {
-	std::cin >> m_string;
+	//536870911/3 was the largest char array size I could find.
+	//It could be more precise. But I didn't want to. All I know is that anything much larger
+	//Exceeds 2GB allocated memory.
+	//Instead its a lame 100 max.
+	const size_t MAXSTRINGLENGTH = 100;
+	char m_newString[MAXSTRINGLENGTH];
+	m_newString[0] = '\0';
+	std::cin.getline(m_newString, MAXSTRINGLENGTH);
+	
+	delete[] m_string;
+
+	m_length = strlen(m_newString) + 1;
+	m_string = new char[m_length];
+
+	strcpy_s(m_string, m_length, m_newString);
 }
 
+//Working
 void String::WriteToConsole() {
-	std::cout << *m_string << std::endl;
+	std::cout << m_string << std::endl;
 }
 
+//Working
 bool String::operator == (const String& other) {
-	if (m_length != other.m_length) return false;
-	for (int i = 0; i < m_length; i++) {
-		if (m_string[i] != other[i]) return false;
-	}
-	return true;
+	
+	return EqualTo(other);
 }
 
+//Working
 bool String::operator != (const String& other) {
-	if (m_length != other.m_length) return true;
-	for (int i = 0; i < m_length; i++) {
-		if (m_string[i] != other[i]) return true;
-	}
-	return false;
+	return !EqualTo(other);
 }
 
-
+//Working
 String& String::operator = (const String& other) {
 	delete[] m_string;
-	m_length = other.Length();
+	m_length = other.Length() + 1;
 	m_string = new char[m_length];
-	for (int i = 0; i < m_length; i++) {
-		m_string[i] = other[i];
-	}
+
+	strcpy_s(m_string, m_length, other.CStr());
 
 	String newString = String(m_string);
 
 	return newString;
 }
 
+//Working??
 char& String::operator[](size_t index) {
 	if (index > m_length) return m_string[m_length -1];
 	return m_string[index];
 }
 
+//Working??
 const char& String::operator[](size_t index) const {
-	if (index > m_length) return '\0';
+
+	if (index > m_length || index < 0) return '\0';
 	return m_string[index];
 }
 
-String& String::operator+ (const String& other) {
+//Working
+const String String::operator+ (const String& other) const {
+		
 	String newString(m_string);
-	char* m_newString = new char[m_length + other.Length()];
-	for (int i = 0; i < m_length; i++) {
-		m_newString[i] = m_string[i];
-	}
-	for (int i = m_length; i < m_length + other.Length(); i++) {
-		m_newString[i] = other[i];
-	}
-	delete[] m_string;
-	m_length += other.Length();
+	newString.Append(other);
+
 	return newString;
 }
 
+//Working
 String& String::operator+= (const String& other) {
-	char* m_newString = new char[m_length + other.Length()];
-	for (int i = 0; i < m_length; i++) {
-		m_newString[i] = m_string[i];
-	}
-	for (int i = m_length; i < m_length + other.Length(); i++) {
-		m_newString[i] = other[i];
-	}
-	
-	String newString = String(m_newString);
-	
-	delete[] m_string;
-	delete[] m_newString;
+	Append(other);
 
-
-	return newString;
+	return *this;
 }
