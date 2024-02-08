@@ -17,6 +17,18 @@ int main() {
 
 	String plorgoStr2 = String(plorgoString);
 	
+
+	std::cout << plorgoString.Find(2, "rgo") << std::endl;
+
+	plorgoString.ConcatAt("guspin", 4);
+	std::cout << plorgoString.CStr() << std::endl;
+
+
+	plorgoString.DeleteRange(4, 10);
+	std::cout << plorgoString.CStr() << std::endl;
+
+	
+
 	/*
 	plorgoString.WriteToConsole();
 	plorgoStr2.WriteToConsole();
@@ -29,16 +41,31 @@ int main() {
 	plorgoString.WriteToConsole();
 	plorgoStr2.WriteToConsole();
 	*/
-	plorgoString += "plorgoStr2";
-	plorgoString.WriteToConsole();
-	
-	if ((plorgoString != pingusString)) std::cout << plorgoStr2[2] << std::endl;
+	//plorgoString += "plorgoStr2";
+	/*
+	plorgoString += "pungus";
 
-	std::cout << plorgoStr2.CharacterAt(2) << std::endl;
+	String testString(plorgoString.ToUpper());
+	std::cout << testString.CStr() << "AAAA" << std::endl;
+	std::cout << plorgoString.CStr() << "???" << std::endl;
+	std::cout << plorgoString.ToUpper().CStr() << "???" << std::endl;
+	plorgoString.WriteToConsole();*/
+	
+	//plorgoString = plorgoString.Append(pingusString);
+	//plorgoString.WriteToConsole();
 
 	/*
-	plorgoString.Append(pingusString);
-	plorgoString.Prepend(pingusString);
+	if ((plorgoString != pingusString)) std::cout << plorgoStr2[2] << std::endl;
+
+	plorgoString = String("plorgo").ToUpper();
+	plorgoString.WriteToConsole();
+	std::cout << plorgoString.CStr() << std::endl;
+	//std::cout << (plorgoStr2.ToUpper()).CStr() << std::endl;
+	*/
+	
+
+	
+	/*plorgoString.Prepend(pingusString);
 
 	plorgoString.WriteToConsole();
 	plorgoString.ToUpper();

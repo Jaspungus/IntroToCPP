@@ -13,25 +13,40 @@ public:
 
 public:
 	size_t Length() const;
+	
 	char& CharacterAt(size_t index);
 	const char& CharacterAt(size_t index) const;
-	bool EqualTo(const String str);
-	void Append(const String str);
 	
-	void Prepend(String str);
+	bool EqualTo(const String str);
+
+	String& Append(const String str);
+	String& Prepend(String str);
+	String& ConcatAt(String str, size_t index);
+	//String& DeleteRange(size_t start, size_t end);
+	String Substring(size_t start, size_t end);
+
 	const char* CStr() const;
-	void ToLower();
-	void ToUpper();
+	
+	String ToLower();
+	String ToUpper();
+	
 	size_t Find(const String findString);
-	size_t Find(int startIndex, const String findString);
-	void Replace(const String findString, const String replaceString);
-	void ReadFromConsole();
-	void WriteToConsole();
+	size_t Find(const int startIndex, const String findString);
+	
+	String& Replace(const String findString, const String replaceString);
+	
+	String& ReadFromConsole();
+	String& WriteToConsole();
 
 	
 public:
 	bool operator == (const String& other);
 	bool operator != (const String& other);
+
+	bool operator > (const String& other);
+	bool operator < (const String& other);
+	bool operator >= (const String& other);
+	bool operator <= (const String& other);
 
 	String& operator = (const String& other);
 
@@ -44,7 +59,7 @@ public:
 
 private:
 	size_t m_length = 1;
-	char* m_string = new char[m_length];
+	char* m_string;
 	 
 };
 
