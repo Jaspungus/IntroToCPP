@@ -6,6 +6,19 @@
 
 int main() {
 	
+	std::cout << "Create a String called \"Pingunk\"" << std::endl;
+	String testString("Pingunk");
+	std::cout << "It will print as empty: " << testString.CStr() << std::endl;
+
+	std::cout << "Now we'll set it to \"Plorgo\"" << std::endl;
+	testString = "Plorgo";
+	std::cout << "Now it prints as: " << testString.CStr() << std::endl;
+	
+	std::cout << "Next we'll make a new string testString2 that matches testString1" << std::endl;
+	String testString2(testString);
+	std::cout << "TestString: " << testString.CStr() << " TestString2: " << testString.CStr() << std::endl;
+
+
 	//char* poopgisPtr = new char['p','o','o','p','g','i','s','\0'];
 	char plorgo[] = "plorgo";
 	char pingus[] = "pingus";
@@ -21,13 +34,22 @@ int main() {
 	std::cout << plorgoString.Find(2, "rgo") << std::endl;
 
 	plorgoString.ConcatAt("guspin", 4);
+	//std::cout << plorgoString.CStr() << std::endl;
+
+
+	//plorgoString.DeleteRange(4, 10);
+	//std::cout << plorgoString.CStr() << std::endl;
+
+	//std::cout << plorgoString.Substring(0, 4).CStr() << std::endl;
+
+
+	plorgoString.Replace("gus", "gospagis");
 	std::cout << plorgoString.CStr() << std::endl;
 
-
-	plorgoString.DeleteRange(4, 10);
-	std::cout << plorgoString.CStr() << std::endl;
-
-	
+	pingusString = "pintopoop";
+	std::cout << pingusString.CStr() << std::endl;
+	pingusString.Replace("p", "bup");
+	std::cout << pingusString.CStr() << std::endl;
 
 	/*
 	plorgoString.WriteToConsole();

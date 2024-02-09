@@ -6,6 +6,7 @@ class String
 public:
 	String();
 	String(const char* string);
+	String(const size_t a_size);
 
 	String(const String& other);
 
@@ -34,7 +35,9 @@ public:
 	size_t Find(const int startIndex, const String findString);
 	
 	String& Replace(const String findString, const String replaceString);
-	
+	String& Replace(const String findString, const String replaceString, size_t startIndex);
+
+
 	String& ReadFromConsole();
 	String& WriteToConsole();
 

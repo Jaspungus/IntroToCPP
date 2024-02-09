@@ -7,6 +7,14 @@ String::String() {
 	m_string[0] = '\0';
 }
 
+// Working
+//Creates a String based on a char array
+String::String(const size_t a_size) {
+	m_length = a_size + 1;
+	m_string = new char[m_length];
+	m_string[m_length] = '\0';
+}
+
 //Working
 //Creates a String based on a char array
 String::String(const char* string) {
@@ -172,13 +180,20 @@ String& String::DeleteRange(size_t start, size_t end) {
 	return *this;
 }*/
 
+
+//Working
+//Fetches the substring between start(inclusive) and end (exclusive).
 String String::Substring(size_t start, size_t end) {
 	
-	char* m_newString = new char[end - start + 1];
+	if (start - end == 0) return String("\0");
 
-	for (int i = start; i < end; i++) {
+	char* m_newString = new char[end - start + 1];
+	m_newString[0] = '\0';
+
+	for (size_t i = start; i < end; i++) {
 		m_newString[i - start] = m_string[i];
 	}
+	m_newString[end - start] = '\0';
 	
 	return String(m_newString);
 }
@@ -243,35 +258,165 @@ size_t String::Find(const int startIndex, String findString) {
 }
 
 String& String::Replace(String findString, String replaceString) {
-	char* m_newString = new char[m_length];
-	String newStringInstance(m_newString);
-	int replaceIndex = -1;
+	
+	return Replace(findString, replaceString, 0);
+	//char* m_newString = new char[m_length];
+	//m_newString[0] = '\0';
+	//String newStringInstance(m_newString);
+	//int replaceIndex = -1;
 
-	for (int i = 0; i < m_length; i++) {
-		for (int j = 0; j <= findString.Length(); j++) {
-			if (j == findString.Length()) replaceIndex = i;
+	////These two loops are near identical to the find function
+	////I could probably be smart and use Find here, but that would require some
+	////redesigning that I don't feel like doing.
+
+	//for (size_t i = 0; i < m_length; i++) {
+	//	for (size_t j = 0; j <= findString.Length(); j++) {
+	//		if (j == findString.Length()) {
+	//			replaceIndex = i;
+	//			std::cout << "match at " << replaceIndex << std::endl;
+	//			break;
+	//		}
+	//		if (findString[j] != m_string[j + i]) {
+	//			break;
+	//		}
+	//	}
+
+	//	if (replaceIndex != -1) {
+	//		delete[] m_newString;
+
+	//		m_length = m_length - findString.Length() + replaceString.Length();
+	//		m_newString = new char[m_length];
+
+	//		if (i > 0) newStringInstance.Append(Substring(0, i));
+	//
+	//		newStringInstance.Append(replaceString);
+
+	//		newStringInstance.Append(Substring(i + findString.Length(), m_length));
+
+	//		newStringInstance.Replace(findString, replaceString, i + replaceString.Length());
+	//		//	Substring(0, i) + replaceString + Substring(i + replaceString.Length(), m_length + replaceString.Length());
+	//		
+	//		delete[] m_string;
+	//		m_string = new char[m_length];
+	//		strcpy_s(m_string, strlen(newStringInstance.CStr()) + 1, newStringInstance.CStr());
+	//		delete[] m_newString;
+
+	//		std::cout << m_string << std::endl;
+	//		return *this;
+	//	}
+	//}
+	//return *this;
+}
+
+String& String::Replace(String findString, String replaceString, size_t startIndex) {
+
+
+	int replaceIndex = 0;
+
+	//These two loops are near identical to the find function
+	//I could probably be smart and use Find here, but that would require some
+	//redesigning that I don't feel like doing.
+
+	while(true) 
+	{ 
+		replaceIndex = Find(replaceIndex, findString); 
+		if (replaceIndex == -1) break;
+		//Increase m_length(null terminator inclusive) by the find and replace strings
+		//excluding their terminators.
+		m_length = m_length - findString.Length() + replaceString.Length();
+		//Clear m_newString;
+		char* m_newString = new char[m_length];
+		m_newString[0] = '\0';
+		String newStringInstance(m_newString);
+
+		//This prevents it from appending nothing to the front of the string.
+		//Otherwise it adds the string up to the replacement point onto an empty char[]
+		if (replaceIndex > 0) newStringInstance.Append(Substring(0, replaceIndex));
+
+		//Then it appends the replacement string in question.
+		newStringInstance.Append(replaceString);
+
+		//And then finishes by adding the string after the area to be replaced.
+		//Substring does not return the end index character, so m_length will not return the null terminator.
+		//Which should be added by the append function.
+		if (replaceIndex + findString.Length() < m_length - 1) {
+			newStringInstance.Append(Substring(replaceIndex + findString.Length(), m_length - 1));
+		}
+
+		//It then calls this function again,starting from after where the replacement string has just been inserted.
+		//newStringInstance.Replace(findString, replaceString, replaceIndex + replaceString.Length());
+		
+
+		//It then clears m_string and reinitialises it and copies over the temporary value.
+		//The temporary value is then deleted and the original is returned, having had
+		//The target string replaced.
+		delete[] m_string;
+		m_string = new char[m_length];
+		m_string[m_length - 1] = '\0'; //Accidentally was setting this outside the array and it broke nasty.
+		strcpy_s(m_string, strlen(newStringInstance.CStr()) + 1, newStringInstance.CStr());
+		delete[] m_newString;
+
+		replaceIndex += replaceString.Length();
+	}
+
+
+	/*
+	for (size_t i = startIndex; i < m_length; i++) {
+		for (size_t j = 0; j <= findString.Length(); j++) {
+			if (j == findString.Length()) {
+				replaceIndex = i;
+				std::cout << "match at " << replaceIndex << std::endl;
+				break;
+			}
 			if (findString[j] != m_string[j + i]) {
 				break;
 			}
 		}
 
+		//Everywhere there is a confirmed match, this calls. 
+		//They said I was crazy for not using find. That's not the issue.
 		if (replaceIndex != -1) {
+			
+			//Increase m_length(null terminator inclusive) by the find and replace strings
+			//excluding their terminators.
+			m_length = m_length - findString.Length() + replaceString.Length();
+			//Clear m_newString;
+			char* m_newString = new char[m_length];
+			m_newString[0] = '\0';
+			String newStringInstance(m_newString);
+	
+			//This prevents it from appending nothing to the front of the string.
+			//Otherwise it adds the string up to the replacement point onto an empty char[]
+			if (i > 0) newStringInstance.Append(Substring(0, i));
+
+			//Then it appends the replacement string in question.
+			newStringInstance.Append(replaceString);
+
+			//And then finishes by adding the string after the area to be replaced.
+			//Substring does not return the end index character, so m_length will not return the null terminator.
+			//Which should be added by the append function.
+			newStringInstance.Append(Substring(i + findString.Length(), m_length));
+
+			//It then calls this function again,starting from after where the replacement string has just been inserted.
+			if (i + replaceString.Length() < m_length - replaceString.Length()) {
+				newStringInstance.Replace(findString, replaceString, i + replaceString.Length());
+			}
+			
+			//It then clears m_string and reinitialises it and copies over the temporary value.
+			//The temporary value is then deleted and the original is returned, having had
+			//The target string replaced.
+			delete[] m_string;
+			m_string = new char[m_length];
+			m_string[m_length] = '\0';
+			strcpy_s(m_string, strlen(newStringInstance.CStr()) + 1, newStringInstance.CStr());
 			delete[] m_newString;
 
-			m_length += replaceString.Length();
-			m_newString = new char[m_length];
-			newStringInstance.Append(Substring(0, i)).Append(replaceString).Append(Substring(i + replaceString.Length(), m_length + replaceString.Length()));
-				
-			//	Substring(0, i) + replaceString + Substring(i + replaceString.Length(), m_length + replaceString.Length());
-			i = -1;
-		}
-	}
-
-
-
+			std::cout << m_string << std::endl;
+			return *this;
+		}*/
+	//}
 	return *this;
 }
-
 //Working
 //Takes an imput of max 100 chars. Sets the string to that. 
 String& String::ReadFromConsole() {
