@@ -23,7 +23,6 @@ public:
 	String& Append(const String str);
 	String& Prepend(String str);
 	String& ConcatAt(String str, size_t index);
-	//String& DeleteRange(size_t start, size_t end);
 	String Substring(size_t start, size_t end);
 
 	const char* CStr() const;
@@ -35,7 +34,6 @@ public:
 	size_t Find(const int startIndex, const String findString);
 	
 	String& Replace(const String findString, const String replaceString);
-	String& Replace(const String findString, const String replaceString, size_t startIndex);
 
 
 	String& ReadFromConsole();

@@ -6,98 +6,48 @@
 
 int main() {
 	
-	std::cout << "Create a String called \"Pingunk\"" << std::endl;
+	std::cout << "Create a String called testString with the value \"Pingunk\"" << std::endl;
 	String testString("Pingunk");
 	std::cout << "It will print as empty: " << testString.CStr() << std::endl;
 
-	std::cout << "Now we'll set it to \"Plorgo\"" << std::endl;
+	std::cout << "\nNow we'll set it to \"Plorgo\"" << std::endl;
 	testString = "Plorgo";
 	std::cout << "Now it prints as: " << testString.CStr() << std::endl;
 	
-	std::cout << "Next we'll make a new string testString2 that matches testString1" << std::endl;
+	std::cout << "\nNext we'll make a new string testString2 that matches testString1" << std::endl;
 	String testString2(testString);
-	std::cout << "TestString: " << testString.CStr() << " TestString2: " << testString.CStr() << std::endl;
+	std::cout << "TestString: " << testString.CStr() << "\nTestString2: " << testString.CStr() << std::endl;
 
+	std::cout << "\n		SPEED ROUND\n" << std::endl;
+	std::cout << "testString Length: " << testString.Length() << std::endl;
+	std::cout << "testString Character at index 4: " << testString.CharacterAt(4) << std::endl;
+	std::cout << "testString Append \"plooper\": " << testString.Append(String("plooper")).CStr() << std::endl;
+	std::cout << "testString Prepend \"globor\": " << testString.Prepend(String("globor")).CStr() << std::endl;
+	std::cout << "testString Concat \"open\" at index 2: " << testString.ConcatAt(String("open"), 2).CStr() << std::endl;
 
-	//char* poopgisPtr = new char['p','o','o','p','g','i','s','\0'];
-	char plorgo[] = "plorgo";
-	char pingus[] = "pingus";
+	std::cout << "\nSet testString2 to substring 2-10 of testString1" << std::endl;
+	testString2 = testString.Substring(2, 10);
+	std::cout << "testString2: " << testString2.CStr() << std::endl;
+
+	std::cout << "testString2 in LowerCase: " << testString2.ToLower().CStr() << std::endl;
+	std::cout << "testString2 in UpperCase: " << testString2.ToUpper().CStr() << std::endl;
+
+	std::cout << "Index of plooper (case sensitive) in testString: " << testString.Find("plOoper") << std::endl;
+
+	std::cout << "Replace o with a in testString: " << testString.Replace(String("o"), String("a")).CStr() << std::endl;
 	
-	String plorgoString = String("plorgo");
-	String pingusString = String(pingus);
-	//string = poopgisPtr;
-	//string = plorgo;
-
-	String plorgoStr2 = String(plorgoString);
-	
-
-	std::cout << plorgoString.Find(2, "rgo") << std::endl;
-
-	plorgoString.ConcatAt("guspin", 4);
-	//std::cout << plorgoString.CStr() << std::endl;
-
-
-	//plorgoString.DeleteRange(4, 10);
-	//std::cout << plorgoString.CStr() << std::endl;
-
-	//std::cout << plorgoString.Substring(0, 4).CStr() << std::endl;
-
-
-	plorgoString.Replace("gus", "gospagis");
-	std::cout << plorgoString.CStr() << std::endl;
-
-	pingusString = "pintopoop";
-	std::cout << pingusString.CStr() << std::endl;
-	pingusString.Replace("p", "bup");
-	std::cout << pingusString.CStr() << std::endl;
-
-	/*
-	plorgoString.WriteToConsole();
-	plorgoStr2.WriteToConsole();
-
-	plorgoStr2.ReadFromConsole();
-
-	plorgoString.Append(pingusString);
-	plorgoStr2.Append(pingusString);
-
-	plorgoString.WriteToConsole();
-	plorgoStr2.WriteToConsole();
-	*/
-	//plorgoString += "plorgoStr2";
-	/*
-	plorgoString += "pungus";
-
-	String testString(plorgoString.ToUpper());
-	std::cout << testString.CStr() << "AAAA" << std::endl;
-	std::cout << plorgoString.CStr() << "???" << std::endl;
-	std::cout << plorgoString.ToUpper().CStr() << "???" << std::endl;
-	plorgoString.WriteToConsole();*/
-	
-	//plorgoString = plorgoString.Append(pingusString);
-	//plorgoString.WriteToConsole();
-
-	/*
-	if ((plorgoString != pingusString)) std::cout << plorgoStr2[2] << std::endl;
-
-	plorgoString = String("plorgo").ToUpper();
-	plorgoString.WriteToConsole();
-	std::cout << plorgoString.CStr() << std::endl;
-	//std::cout << (plorgoStr2.ToUpper()).CStr() << std::endl;
-	*/
-	
-
-	
-	/*plorgoString.Prepend(pingusString);
-
-	plorgoString.WriteToConsole();
-	plorgoString.ToUpper();
-	plorgoString.WriteToConsole();
-
-	plorgoString.ToLower();
-	plorgoString.WriteToConsole();
-	*/
-
-	//string.ReadFromConsole();
-	//string.WriteToConsole();
-	
+	std::cout << "Now you get to write in your own text. It'd better be \"Hello, World!\"." << std::endl;
+	while (true) {
+		testString.ReadFromConsole();
+		if (testString == "Hello, World!") break;
+		if (testString.ToLower() == "hello, world!") {
+			std::cout << "You're lucky this isn't case sensitive." << std::endl;
+			break;
+		}
+		std::cout << "Do Better." << std::endl;
+	}
+	std::cout << "Good job! You wrote: ";
+	testString.WriteToConsole();
+	std::cout << "You can leave now." << std::endl;
+	system("pause");
 }
