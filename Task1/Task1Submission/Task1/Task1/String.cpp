@@ -197,21 +197,7 @@ String String::ToUpper() {
 
 //Finds the string, if it is not found, return -1. If found, return the index of the string.
 size_t String::Find(String findString) {
-	//If the given string exceeds the size of the original. Return -1.
-	if (findString.Length() > Length()) return -1;
-	//Loop through each character in the original.
-	for (int i = 0; i < m_length; i++) {
-		//For each character in the original, loop through again to search for a match.
-		for (int j = 0; j <= findString.Length(); j++) {
-			//If it reaches the end of the given string, return the index.
-			if (j == findString.Length()) return i;
-			//If the two strings no longer match, exit the inner loop.
-			if (findString.ToLower()[j] != ToLower()[j + i]) {
-				break;
-			}
-		}
-	}
-	return -1;
+	return Find(0, findString);
 }
 //Finds the string, if it is not found, return -1. If found, return the index of the string.
 //This one starts at a givent index and only checks after that point.
@@ -221,6 +207,7 @@ size_t String::Find(const int startIndex, String findString) {
 	if (startIndex + findString.Length() > m_length || startIndex < 0) return -1;
 	for (int i = startIndex; i < m_length; i++) {
 		for (int j = 0; j <= findString.Length(); j++) {
+			if (i + j >= findString.Length()) return -1;
 			if (j == findString.Length()) return i;
 			if (findString.ToLower()[j] != ToLower()[j + i]) {
 				break;
