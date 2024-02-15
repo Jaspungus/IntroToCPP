@@ -1,11 +1,47 @@
 // Task4.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
+#include <stdlib.h>
+#include "String.h"
+#include "Player.h"
+
+using namespace std;
+
+//Coloured text yippee
+//Perhaps but this in a different script so anywhere can access it. For like item pick ups etc.
+//We'll see. Or do like an if based on Item.Name and Item.Quality. Figure that out.
+// ESC[background_colour;Text_colourm output Esc[m
+#define ESC "\033["
+#define BLACK "0"
+#define RED "1"
+#define GREEN "2"
+#define YELLOW "3"
+#define BLUE "4"
+#define PURPLE "5"
+#define LIGHT_BLUE "6"
+#define WHITE "7"
+#define RESET "\033[m"
+
+void ColouredText(const char* a_string, const char* a_backgroundColour, const char* a_foregroundColour);
+
+Player m_player;
+String m_inputString = "";
+bool m_isPlaying = true;
 
 int main()
 {
-    std::cout << "Hello World!\n";
+	while (m_isPlaying) {
+		m_inputString.ReadFromConsole();
+
+		//Can't use switch statement. Now I have to do icky if-else;
+		if (m_inputString == "Plorgo") {
+			cout << "You have contracted " << ESC << "106" << ";" << "35m" << "Bowel Cancer" << RESET << endl;
+			cout << "You have contracted "; ColouredText("Bowel Cancer", RED, LIGHT_BLUE); cout << endl;
+		}
+	}
+}
+
+void ColouredText(const char* a_string, const char* a_backgroundColour, const char* a_foregroundColour) {
+	cout << ESC << "3" << a_backgroundColour << ";" << "4" << a_foregroundColour << "m" << a_string << RESET;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

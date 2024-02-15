@@ -4,7 +4,7 @@
 //Heeheehoo hahaho C-String functions make it so neat.
 
 String::String() {
-	m_string[0] = '\0';
+	m_string = new char{'\0'};
 }
 
 // Working
@@ -168,7 +168,10 @@ String String::Substring(size_t start, size_t end) {
 	}
 	m_newString[end - start] = '\0';
 	
-	return String(m_newString);
+	String m_output(m_newString);
+	delete[] m_newString;
+
+	return m_output;
 }
 
 

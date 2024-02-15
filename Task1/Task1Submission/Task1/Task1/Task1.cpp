@@ -7,7 +7,7 @@
 int main() {
 	
 	std::cout << "Create a String called testString with the value \"Pingunk\"" << std::endl;
-	String testString("Pingunk");
+	String testString;
 	std::cout << "It will print as empty: " << testString.CStr() << std::endl;
 
 	std::cout << "\nNow we'll set it to \"Plorgo\"" << std::endl;
