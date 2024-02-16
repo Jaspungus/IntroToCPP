@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "String.h"
 #include "Player.h"
+#include "SpellManager.h"
 
 using namespace std;
 
@@ -23,19 +24,28 @@ using namespace std;
 
 void ColouredText(const char* a_string, const char* a_backgroundColour, const char* a_foregroundColour);
 
-Player m_player;
+Player* player = new Player((size_t)20, (size_t)20);
+SpellManager* spellManager = new SpellManager();
 String m_inputString = "";
 bool m_isPlaying = true;
+
 
 int main()
 {
 	while (m_isPlaying) {
 		m_inputString.ReadFromConsole();
+		std::cout << m_inputString.CStr() << std::endl;
+		std::cout << m_inputString.Find("cast") << std::endl;
 
 		//Can't use switch statement. Now I have to do icky if-else;
 		if (m_inputString == "Plorgo") {
 			cout << "You have contracted " << ESC << "106" << ";" << "35m" << "Bowel Cancer" << RESET << endl;
 			cout << "You have contracted "; ColouredText("Bowel Cancer", RED, LIGHT_BLUE); cout << endl;
+		}
+		std::cout << "It got to line 43!" << std::endl;
+		if (m_inputString.Find(0, "Cast") != -1) {
+			String testString("Power Word: Scrunch");
+			player->CastSpell(testString);
 		}
 	}
 }

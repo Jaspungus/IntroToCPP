@@ -42,6 +42,9 @@
     <ClCompile Include="Spell.cpp">
       <Filter>Source Files\Spells</Filter>
     </ClCompile>
+    <ClCompile Include="SpellManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HealthModule.h">
@@ -61,6 +64,9 @@
     </ClInclude>
     <ClInclude Include="Spell.h">
       <Filter>Header Files\Spells</Filter>
+    </ClInclude>
+    <ClInclude Include="SpellManager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

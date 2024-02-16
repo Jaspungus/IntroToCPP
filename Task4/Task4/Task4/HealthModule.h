@@ -14,7 +14,7 @@ public:
 
 	//virtual void Die();
 
-private:
+protected:
 	size_t m_maxHealth = 0;
 	size_t m_currentHealth = 0;
 	size_t m_maxDignity = 0;

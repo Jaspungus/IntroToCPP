@@ -1,12 +1,24 @@
 #include "Player.h"
 #include "Spell.h"
+#include "SpellManager.h"
 
-//extern const char* spellList[2];
+extern SpellManager* spellManager;
 
 Player::Player() {
 	delete[] m_knownSpells;
-	m_knownSpells = new Spell[1]{new Scrunch};
+	//m_knownSpells = new Spell[1]{new Scrunch};
+	m_knownSpells = new int[3] {0,1,2};	
 }
+
+Player::Player(size_t a_maxHealth, size_t a_maxDignity) {
+	m_currentHealth = a_maxHealth;
+	m_maxHealth = a_maxDignity;
+
+	delete[] m_knownSpells;
+	//m_knownSpells = new Spell[1]{new Scrunch};
+	m_knownSpells = new int[3] {0, 1, 2};
+}
+
 
 Player::~Player()
 {
@@ -14,22 +26,13 @@ Player::~Player()
 }
 
 void Player::CastSpell(String& a_spellName) {
-	for (int i = 0; i < m_knownCount; i++)
-	{
-		if (m_knownSpells[i].GetName() == a_spellName) {
-			m_inCombat ? m_knownSpells[i].CombatCast(m_enemyP) : m_knownSpells[i].Cast();
-		}
-	}
+	std::cout << "It went through player!" << std::endl;
+	spellManager->CastSpell(spellManager->CheckSpellList(a_spellName), this, m_enemyP);
 	
 }
 
 bool Player::CheckSpell(String& a_spellName) {
-	for (int i = 0; i < m_knownCount; i++)
-	{
-		if (m_knownSpells[i].GetName() == a_spellName) {
-			return true;
-		}
-	}
+	
 	return false;
 
 }

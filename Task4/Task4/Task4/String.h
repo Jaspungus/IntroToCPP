@@ -30,8 +30,8 @@ public:
 	String ToLower();
 	String ToUpper();
 
-	size_t Find(const String findString);
-	size_t Find(const int startIndex, const String findString);
+	int Find(const String findString);
+	int Find(const int startIndex, const String findString);
 
 	String& Replace(const String findString, const String replaceString);
 

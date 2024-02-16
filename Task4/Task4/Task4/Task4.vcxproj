@@ -132,6 +132,7 @@
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Scrunch.cpp" />
     <ClCompile Include="Spell.cpp" />
+    <ClCompile Include="SpellManager.cpp" />
     <ClCompile Include="String.cpp" />
     <ClCompile Include="Task4.cpp" />
   </ItemGroup>
@@ -141,6 +142,7 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="Scrunch.h" />
     <ClInclude Include="Spell.h" />
+    <ClInclude Include="SpellManager.h" />
     <ClInclude Include="String.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

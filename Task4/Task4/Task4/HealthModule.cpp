@@ -1,5 +1,8 @@
 #include "HealthModule.h"
 
+//Delete after
+#include <iostream>
+
 HealthModule::HealthModule() {
 	
 }
@@ -35,6 +38,7 @@ void HealthModule::TakeDignityDamage(size_t a_damage)
 
 	}
 	m_currentDignity -= a_damage;
+	std::cout << m_currentDignity << std::endl;
 }
 void HealthModule::HealDignity(size_t a_health)
 {
