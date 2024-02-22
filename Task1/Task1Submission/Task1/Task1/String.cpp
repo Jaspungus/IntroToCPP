@@ -4,6 +4,7 @@
 //Heeheehoo hahaho C-String functions make it so neat.
 
 String::String() {
+	m_length = 1;
 	m_string = new char{ '\0' };
 }
 
@@ -58,14 +59,14 @@ const char& String::CharacterAt(size_t index) const {
 
 //Working
 //Compares two strings.
-bool String::EqualTo(String str) {
+bool String::EqualTo(const String& str) const {
 	return (strcmp(m_string, str.CStr()) == 0);
 }
 
 
 //Working
 //Appends another string to the end of the orginal.
-String& String::Append(const String str) {
+String& String::Append(const String& str) {
 	size_t newLength = m_length + str.Length();
 	char* m_newString = new char[newLength];
 	m_newString[0] = '\0';
@@ -87,7 +88,7 @@ String& String::Append(const String str) {
 
 //Working
 //Prepends another string to the beginning of the original.
-String& String::Prepend(String str) {
+String& String::Prepend(const String& str) {
 
 	size_t newLength = m_length + str.Length();
 	char* m_newString = new char[newLength];
@@ -115,40 +116,42 @@ const char* String::CStr() const {
 //Working
 //I made this to do the Replace Function and then realised I didn't need it.
 //It's still neat though.
-String& String::ConcatAt(String str, size_t index) {
+
+//Something here reeks and seesm to be erroring.
+String& String::ConcatAt(const String& str, const size_t index) {
 	m_length += str.Length();
-	char* m_newString = new char[m_length];
-	m_newString[0] = '\0';
+	char* newString = new char[m_length];
+	newString[0] = '\0';
 
 	//Up until then new string, write the old string.
 	for (size_t i = 0; i <= index; i++) {
 		if (i == index) {
-			m_newString[i] = '\0';
+			newString[i] = '\0';
 			break;
 		}
 
-		m_newString[i] = m_string[i];
+		newString[i] = m_string[i];
 	}
 
 	//Add the new string.
-	strcat_s(m_newString, m_length, str.CStr());
+	strcat_s(newString, m_length, str.CStr());
 
 	//Finish adding the old string.
 	for (size_t i = 0; i <= m_length; i++) {
 		if (i == m_length) {
-			m_newString[i + index + str.Length()] = '\0';
+			newString[i + index + str.Length()] = '\0';
 			break;
 		}
 
-		m_newString[i + index + str.Length()] = m_string[i + index];
+		newString[i + index + str.Length()] = m_string[i + index];
 	}
 
 	delete[] m_string;
 
 	m_string = new char[m_length];
-	strcpy_s(m_string, m_length, m_newString);
+	strcpy_s(m_string, m_length, newString);
 
-	delete[] m_newString;
+	delete[] newString;
 
 	return *this;
 }
@@ -156,22 +159,22 @@ String& String::ConcatAt(String str, size_t index) {
 
 //Working
 //Fetches the substring between start(inclusive) and end (exclusive).
-String String::Substring(size_t start, size_t end) {
+String String::Substring(const size_t start, const size_t end) {
 
 	if (start - end == 0) return String("\0");
 
-	char* m_newString = new char[end - start + 1];
-	m_newString[0] = '\0';
+	char* newString = new char[end - start + 1];
+	newString[0] = '\0';
 
 	for (size_t i = start; i < end; i++) {
-		m_newString[i - start] = m_string[i];
+		newString[i - start] = m_string[i];
 	}
-	m_newString[end - start] = '\0';
+	newString[end - start] = '\0';
 
-	String m_output(m_newString);
-	delete[] m_newString;
+	String output(newString);
+	delete[] newString;
 
-	return m_output;
+	return output;
 }
 
 
@@ -179,8 +182,9 @@ String String::Substring(size_t start, size_t end) {
 //Converts each lowercase letter to uppercase by adding 32 (The gap between the two ASCII sets)
 //Horrible deceptive document made it look like it returned a seperate string
 //It likely returns itself. Nasty wretched header template. Very upset.
-String String::ToLower() {
-	String newString = String(*this);
+String String::ToLower() const {
+	
+	String newString(m_string);
 	for (int i = 0; i < newString.Length() + 1; i++) {
 		if (65 <= newString[i] && newString[i] <= 90) newString[i] += 32;
 	}
@@ -190,7 +194,8 @@ String String::ToLower() {
 
 //Working
 //Converts each uppercase letter to lowercase by subtracting 32 (The gap between the two ASCII sets)
-String String::ToUpper() {
+String String::ToUpper() const {
+	
 	String newString(m_string);
 	for (int i = 0; i < newString.Length() + 1; i++) {
 		if (97 <= newString[i] && newString[i] <= 122) newString[i] -= 32;
@@ -199,7 +204,7 @@ String String::ToUpper() {
 }
 
 //Finds the string, if it is not found, return -1. If found, return the index of the string.
-int String::Find(String findString) {
+int String::Find(const String& findString) const {
 	//If the given string exceeds the size of the original. Return -1.
 	if (findString.Length() > Length()) return -1;
 	//Loop through each character in the original.
@@ -218,7 +223,7 @@ int String::Find(String findString) {
 }
 //Finds the string, if it is not found, return -1. If found, return the index of the string.
 //This one starts at a givent index and only checks after that point.
-int String::Find(const int startIndex, String findString) {
+int String::Find(const int startIndex, const String& findString) const {
 	//If the given string exceeds the size of the original, or the index is out of bounds. Return -1.
 	//The loop starts at startIndex. Otherwise it is identical.
 	if (startIndex + findString.Length() > Length() || startIndex < 0) return -1;
@@ -226,7 +231,7 @@ int String::Find(const int startIndex, String findString) {
 		for (int j = 0; j <= findString.Length(); j++) {
 			if (i + j >= Length()) return -1;
 			if (j == findString.Length()) return i;
-			if (findString.ToLower()[j] != ToLower()[j + i]) {
+			if (findString[j] != m_string[j + i]) {
 				break;
 			}
 		}
@@ -237,7 +242,7 @@ int String::Find(const int startIndex, String findString) {
 //Working
 //This replaces all instances of findString with replaceString
 //and dynamically scales the string etc.
-String& String::Replace(String findString, String replaceString) {
+String& String::Replace(const String& findString, const String& replaceString) {
 
 	int replaceIndex = 0;
 
@@ -307,6 +312,7 @@ String& String::ReadFromConsole() {
 	m_string = new char[m_length];
 
 	strcpy_s(m_string, m_length, m_newString);
+
 	return *this;
 }
 

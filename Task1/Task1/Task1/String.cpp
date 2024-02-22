@@ -65,7 +65,7 @@ bool String::EqualTo(String str) {
 
 //Working
 //Appends another string to the end of the orginal.
-String& String::Append(const String str) {
+String& String::Append(const String& str) {
 	size_t newLength = m_length + str.Length();
 	char* m_newString = new char[newLength];
 	m_newString[0] = '\0';
@@ -87,7 +87,7 @@ String& String::Append(const String str) {
 
 //Working
 //Prepends another string to the beginning of the original.
-String& String::Prepend(String str) {
+String& String::Prepend(String& str) {
 
 	size_t newLength = m_length + str.Length();
 	char* m_newString = new char[newLength];
@@ -115,7 +115,7 @@ const char* String::CStr() const {
 //Working
 //I made this to do the Replace Function and then realised I didn't need it.
 //It's still neat though.
-String& String::ConcatAt(String str, size_t index) {
+String& String::ConcatAt(String& str, size_t index) {
 	m_length += str.Length();
 	char* m_newString = new char[m_length];
 	m_newString[0] = '\0';
@@ -196,7 +196,7 @@ String String::ToUpper() {
 }
 
 //Finds the string, if it is not found, return -1. If found, return the index of the string.
-size_t String::Find(String findString) {
+size_t String::Find(String& findString) {
 	//If the given string exceeds the size of the original. Return -1.
 	if (findString.Length() > Length()) return -1;
 	//Loop through each character in the original.
@@ -215,7 +215,7 @@ size_t String::Find(String findString) {
 }
 //Finds the string, if it is not found, return -1. If found, return the index of the string.
 //This one starts at a givent index and only checks after that point.
-size_t String::Find(const int startIndex, String findString) {
+size_t String::Find(const int startIndex, String& findString) {
 	//If the given string exceeds the size of the original, or the index is out of bounds. Return -1.
 	//The loop starts at startIndex. Otherwise it is identical.
 	if (startIndex + findString.Length() > m_length || startIndex < 0) return -1;
@@ -233,7 +233,7 @@ size_t String::Find(const int startIndex, String findString) {
 //Working
 //This replaces all instances of findString with replaceString
 //and dynamically scales the string etc.
-String& String::Replace(String findString, String replaceString) {
+String& String::Replace(String& findString, String& replaceString) {
 
 	int replaceIndex = 0;
 

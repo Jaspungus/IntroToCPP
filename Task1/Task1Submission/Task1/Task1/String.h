@@ -18,22 +18,22 @@ public:
 	char& CharacterAt(size_t index);
 	const char& CharacterAt(size_t index) const;
 
-	bool EqualTo(const String str);
+	bool EqualTo(const String& str) const;
 
-	String& Append(const String str);
-	String& Prepend(String str);
-	String& ConcatAt(String str, size_t index);
-	String Substring(size_t start, size_t end);
+	String& Append(const String& str);
+	String& Prepend(const String& str);
+	String& ConcatAt(const String& str, const size_t index);
+	String Substring(const size_t start, const size_t end);
 
 	const char* CStr() const;
 
-	String ToLower();
-	String ToUpper();
+	String ToLower() const;
+	String ToUpper() const;
 
-	int Find(const String findString);
-	int Find(const int startIndex, const String findString);
+	int Find(const String& findString) const; 
+	int Find(const int startIndex, const String& findString) const;
 
-	String& Replace(const String findString, const String replaceString);
+	String& Replace(const String& findString, const String& replaceString);
 
 
 	String& ReadFromConsole();
@@ -60,7 +60,7 @@ public:
 
 private:
 	size_t m_length = 1;
-	char* m_string;
+	char* m_string = nullptr;
 
 };
 
