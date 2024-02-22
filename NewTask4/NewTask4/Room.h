@@ -5,6 +5,7 @@ class Room
 {
 private:
 	String description;
+	int gnomeCount;
 public:
 	Item* item;
 public:

@@ -231,7 +231,7 @@ int String::Find(const int startIndex, const String& findString) const {
 		for (int j = 0; j <= findString.Length(); j++) {
 			if (i + j >= Length()) return -1;
 			if (j == findString.Length()) return i;
-			if (findString[j] != m_string[j + i]) {
+			if (findString.ToLower()[j] != ToLower()[j + i]) {
 				break;
 			}
 		}

@@ -1,8 +1,10 @@
 #pragma once
+#include "String.h"
+
 class Item
 {
 public:
-	void Description() const;
-	void Use();
+	virtual void Description() const;
+	virtual void Use();
 };
 
