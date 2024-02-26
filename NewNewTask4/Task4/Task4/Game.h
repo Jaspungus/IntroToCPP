@@ -37,7 +37,8 @@ private:
 public:
 	static Game* GetInstance() { return &gameInstance; }
 
-
+public:
+	bool (*LineDrawFunction)(Vec2I a_position) = nullptr;
 
 public:
 	Room* GetRoom(const int x, const int y);
@@ -51,6 +52,7 @@ public:
 	bool CheckClearLine(Vec2I start, Vec2I direction);
 
 	Player* GetPlayer();
+	bool GetMovementBlocked(Vec2I a_position);
 
 private:
 	void SetupRooms();
@@ -61,5 +63,11 @@ private:
 	bool IsLineClear(Vec2I a_start, Vec2I a_end);
 	bool PlotLineLow(Vec2I start, Vec2I end);
 	bool PlotLineHigh(Vec2I start, Vec2I end);
+
+//Function Pointer Functions
+//Dude I am probably breaking OOP rules so hard
+private:
+	//bool IsTileBlocked(Vec2I a_position);
+	//bool SetTileToLit(Vec2I a_position);
 };
 

@@ -23,7 +23,7 @@ public:
 	//Item** m_items = nullptr;
 
 	size_t guardCount = 2;
-	Guard** m_guards = new Guard * [guardCount] {nullptr};
+	list<Guard*> m_guards;// = new Guard * [guardCount] {nullptr};
 
 	//
 	int* m_tiles = nullptr;
@@ -36,8 +36,10 @@ public:
 	~Room();
 	void Description() const;
 
-	int GetTileIsLit(Vec2I a_position);
-	int GetTileState(Vec2I a_position);
+	const int GetTileIsLit(Vec2I a_position) const;
+	void SetTileIsLit(Vec2I a_position, bool a_isLit);
+	const int GetTileState(Vec2I a_position) const;
+	
 
 	Item* GetItem(Vec2I a_position);
 	Item* GetItem(size_t index);

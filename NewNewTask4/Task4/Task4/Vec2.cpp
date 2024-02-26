@@ -40,31 +40,33 @@ Vec2I Vec2I::Right() {
 	return Vec2I(1, 0);
 }
 
-float Vec2I::Magnitude() const {
+const float Vec2I::Magnitude() const {
 	return std::sqrtf(pow((float)X, 2) + pow((float)Y, 2));
 }
 
-float Vec2I::MagnitudeSquared() const {
+const float Vec2I::MagnitudeSquared() const {
 	return pow((float)X, 2) + pow((float)Y, 2);
 }
 
 
-float Vec2I::Distance(const Vec2I dest) const {
+const float Vec2I::Distance(const Vec2I dest) const {
 	return (*this - dest).Magnitude();
 }
 
-float Vec2I::DistanceSquared(const Vec2I dest) const {
+const float Vec2I::DistanceSquared(const Vec2I dest) const {
 	return (*this - dest).MagnitudeSquared();
 }
 
-
-bool Vec2I::operator==(const Vec2I& other)
-{
-	if (X == other.X && Y == other.Y) return true;
-	return false;
+const Vec2I Vec2I::Perpindicular() const {
+	return Vec2I(Y, X);
 }
 
-bool Vec2I::operator!=(const Vec2I& other)
+bool Vec2I::operator==(const Vec2I& other) const
+{
+	return (X == other.X && Y == other.Y);
+}
+
+bool Vec2I::operator!=(const Vec2I& other) const
 {
 	if (!(X == other.X && Y == other.Y)) return true;
 	return false;
@@ -114,5 +116,11 @@ Vec2I& Vec2I::operator*=(const  int& other)
 	Y *= other;
 	return *this;
 }
+
+const Vec2I Vec2I::operator-() const
+{
+	return Vec2I(-X, -Y);
+}
+
 
 

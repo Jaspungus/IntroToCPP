@@ -2,9 +2,13 @@
 #include "Vec2.h"
 #include <stdlib.h>
 
+bool GetSightBlocked(Vec2I a_position);
+bool GetLightBlocked(Vec2I a_position);
+
 Game::Game() {
 	player = new Player(Vec2I(3,3));
 	SetupRooms();
+	LineDrawFunction = &GetSightBlocked;
 }
 
 Game::~Game() {
@@ -64,17 +68,19 @@ void Game::Run() {
 		if (command.Find("move") != -1 || command.Find("go") != -1) {
 			Vec2I direction = GetDirectionFromInput(command);
 			
+			bool pathBlocked = GetMovementBlocked(player->GetPosition() + direction);
 			//If the space is free, move the player there.
 			//Diagonals work and only use one turn.
-			if (rooms[currentRoomY][currentRoomX].GetTileState(player->GetPosition() + direction) == 0)
-			{
-				player->Move(direction);
-				useTurn = true;
-			}
+		
 			//If the player cannot move that way, state so. Don't use turn.
-			else {
+			if (pathBlocked)
+			{
 				player->FaceDirection(direction);
 				lastActionText = "You cannot go that way.";
+			}
+			else {
+				player->Move(direction);
+				useTurn = true;
 			}
 
 
@@ -186,7 +192,29 @@ void Game::Run() {
 
 			if (command.Find(castIndex + 4, "Teleport") != -1)
 			{
-				useTurn = true;
+				if (player->GetMana() >= 5)
+				{
+					int i = 0;
+					for (i = 0; i < 5; i++) {
+						if (GetMovementBlocked(player->GetPosition() + player->GetDirectionVector() * (i + 1)))
+						{
+							break;
+						}
+					}
+
+					if (i == 0) {
+						lastActionText = "You cast teleport but theres nowhere to go.";
+					}
+					else {
+						player->SetPosition(player->GetPosition() + player->GetDirectionVector() * i);
+						player->SetMana(player->GetMana() - 5);
+						lastActionText = "You successfully cast teleport.";
+						useTurn = true;
+					}
+				}
+				else {
+					lastActionText = "You do not have enough mana to cast teleport.";
+				}
 			}
 			else if (command.Find(castIndex + 4, "Shock") != -1)
 			{
@@ -249,8 +277,7 @@ Vec2I Game::GetDirectionFromInput(const String& command) const {
 void Game::UpdateDisplay()
 {
 	
-	Room* currentRoomPtr = GetRoom(currentRoomX, currentRoomY);
-	
+	Room* currentRoomPtr = GetCurrentRoom();
 	//Printing the heads up display. Probably not the right term given the context.
 
 	HUD = "Turn Count: ";
@@ -270,6 +297,20 @@ void Game::UpdateDisplay()
 
 	HUD.WriteToConsole();
 
+
+	LineDrawFunction = &GetLightBlocked;
+	for (Guard* guardPtr : currentRoomPtr->m_guards) 
+	{
+		if (guardPtr != nullptr) 
+		{
+			guardPtr->UpdateConePoints();
+			for (int i = 0; i < guardPtr->GetViewWidth(); i++) 
+			{
+				IsLineClear(guardPtr->GetPosition() + guardPtr->GetDirectionVector(), guardPtr->GetConePoints()[i]);
+			}
+		}
+	}
+
 	//Printing the map
 	String printParams = "\n\n";
 	Vec2I currentTilePos = Vec2I(0,0);
@@ -279,13 +320,20 @@ void Game::UpdateDisplay()
 		printParams += "\t";
 		for (currentTilePos.X = 0; currentTilePos.X < currentRoomPtr->ROOMWIDTH; currentTilePos.X++)
 		{
+			
 			//std::cout << currentRoomPtr->GetTile(Vec2I(x, y)) << std::endl;
 			int state = currentRoomPtr->GetTileState(currentTilePos);//currentRoomPtr->GetTile(Vec2I(x, y))->GetState();
 			bool lit = currentRoomPtr->GetTileIsLit(currentTilePos);// currentRoomPtr->GetTile(Vec2I(x, y))->GetIsLit();
+			currentRoomPtr->SetTileIsLit(currentTilePos, false);
 			bool empty = true;
 			printParams += "\033[48;5;";
 
+
+
+			//Check if the player can see the tile.
+			LineDrawFunction = &GetSightBlocked;
 			if (!IsLineClear(player->GetPosition(),currentTilePos)) {
+				
 				printParams += "m   \033[m";
 				continue;
 				//state = 2; //This makes it so icons still appear.
@@ -347,15 +395,20 @@ void Game::UpdateDisplay()
 				}
 			}
 
-			//This also needs to draw their sight cones.
-			for (size_t i = 0; i < currentRoomPtr->guardCount; i++) {
-				if (empty && currentRoomPtr->m_guards[i] != nullptr) {
-					if (IsLineClear(currentTilePos, currentRoomPtr->m_guards[i]->GetPosition()))
-					if (currentTilePos == currentRoomPtr->m_guards[i]->GetPosition()) {
+						//This also needs to draw their sight cones.
+			//LineDrawFunction = &IsTileBlockedSetLit;
+			for (Guard* guardPtr : currentRoomPtr->m_guards) {
+				if (empty && guardPtr != nullptr) {
+					if (currentTilePos == guardPtr->GetPosition()) {
+						if (IsLineClear(guardPtr->GetPosition(), player->GetPosition())
+							&& currentRoomPtr->GetTileIsLit(player->GetPosition()))
+						{ 
+							//Add logic to spot player
+						}
 						printParams += ";38;5;";
-						printParams += String::IntToString(currentRoomPtr->m_guards[i]->GetColour());
-						printParams += "m ";
-						printParams += currentRoomPtr->m_guards[i]->GetIcon();
+						printParams += String::IntToString(guardPtr->GetColour());
+						printParams += "m  ";
+						printParams[printParams.Length() - 1] = guardPtr->m_icon;
 						empty = false;
 					}
 				}
@@ -403,6 +456,7 @@ void Game::SetupRooms()
 	rooms[0, 0]->m_items.push_back(new ManaPotion(Vec2I(1, 3)));
 	rooms[0, 0]->m_items.push_back(new Door(Vec2I(12, 0)));
 	rooms[0, 0]->m_items.push_back(new Door(Vec2I(15, 5), false, Vec2I(0,1), Vec2I(3,3), 1));
+	rooms[0, 0]->m_guards.push_back(new Guard(Vec2I(12, 5), 2));
 
 	tiles = new int[16 * 16]{
 		2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,
@@ -428,7 +482,7 @@ void Game::SetupRooms()
 	rooms[0, 1]->m_items.push_back(new ManaPotion(Vec2I(1, 3)));
 	rooms[0, 1]->m_items.push_back(new Door(Vec2I(12, 0)));
 	rooms[0, 1]->m_items.push_back(new Door(Vec2I(15, 5), false, Vec2I(0, 0), Vec2I(3, 3), 1));
-
+	rooms[0, 1]->m_guards.push_back(new Guard(Vec2I(12, 12), 0));
 }
 
 Room* Game::GetRoom(const int x, const int y) {
@@ -509,7 +563,7 @@ bool Game::CheckClearLine(Vec2I start, Vec2I direction) {
 }
 
 //For shallow slopes. Where Y will increase/decrease by only 1 value at a time.
-//Y is a functoin of X
+//Y is a function of X
 bool Game::PlotLineLow(Vec2I start, Vec2I end) {
 	int dx = end.X - start.X;
 	int dy = end.Y - start.Y;
@@ -525,8 +579,9 @@ bool Game::PlotLineLow(Vec2I start, Vec2I end) {
 	int y = start.Y;
 
 	for (int x = start.X; x < end.X; x++) {
-		//Draw tile / return whatever.
-		if (rooms[currentRoomY][currentRoomX].GetTileState(Vec2I(x, y)) == 2) return false;
+		//Break on a return true. Use this for setting tiles in light cone
+		//And for determining clear sightlines.
+		if (LineDrawFunction(Vec2I(x, y))) return false;
 		if (D > 0) {
 			y = y + yi;
 			D = D + (2 * (dy - dx));
@@ -558,8 +613,10 @@ bool Game::PlotLineHigh(Vec2I start, Vec2I end) {
 
 
 	for (int y = start.Y; y < end.Y; y++) {
-		//Draw tile / return whatever.
-		if (rooms[currentRoomY][currentRoomX].GetTileState(Vec2I(x, y)) == 2) return false;
+		//Break on a return true. Use this for setting tiles in light cone
+		//And for determining clear sightlines.
+		if (LineDrawFunction(Vec2I(x, y))) return false;
+		//if (rooms[currentRoomY][currentRoomX].GetTileState(Vec2I(x, y)) == 2) return false;
 		if (D > 0) {
 			x = x + xi;
 			D = D + (2 * (dx - dy));
@@ -572,3 +629,39 @@ bool Game::PlotLineHigh(Vec2I start, Vec2I end) {
 	return true;
 }
 
+//These are all very slightly different
+
+bool GetSightBlocked(Vec2I a_position) {
+	if (Game::GetInstance()->GetCurrentRoom()->GetTileState(a_position) == 2) return true;
+	return false;
+}
+
+//Fundamental flaw in the line drawing logic. Half the time (based on the two coords)
+//It will draw from the target to the origin, causing strange shadows. FIX
+//Players and guards won't cast shadows now too. Can be reversed with GetMovementBlocked.
+bool GetLightBlocked(Vec2I a_position) {
+
+	Game* gamePtr = Game::GetInstance();
+	gamePtr->GetCurrentRoom()->SetTileIsLit(a_position, true);
+
+	if (gamePtr->GetCurrentRoom()->GetTileState(a_position) != 0){
+		return true;
+	}
+
+	return false;
+}
+
+bool Game::GetMovementBlocked(Vec2I a_position) {
+
+	if (GetCurrentRoom()->GetTileState(a_position) != 0 || player->GetPosition() == a_position)
+	{
+		return true;
+	}
+
+	for (Guard* guard : GetCurrentRoom()->m_guards) {
+		if (guard->GetPosition() == (a_position)) {
+			return true;
+		}
+	}
+	return false;
+}
