@@ -146,35 +146,38 @@ void Game::Run() {
 		}
 
 		//Add compatibility to look at items in range.
-		else if (int lookIndex = command.Find("look") != -1) {
+		else if (int lookIndex = command.Find("look") != -1 || command.Find("face") != -1) {
 			
 			bool itemFound = false;
-			for (size_t i = 0; i < rooms[currentRoomY][currentRoomX].itemCount; i++) {
-				Item* itemPtr = rooms[currentRoomY][currentRoomX].GetItem(i);
-				if (itemPtr != nullptr) {
-					//If within range, check if the name matches.
-					if (player->GetPosition().DistanceSquared(itemPtr->GetPosition()) < pow(player->GetSight(), 2)) 
-					{
-						if (command.Substring(lookIndex + 4, command.Length()).Find(itemPtr->GetName())) 
+			if (lookIndex != -1) {
+				for (Item* itemPtr : GetCurrentRoom()->m_items) {
+					if (itemPtr != nullptr) {
+						//If within range, check if the name matches.
+						if (player->GetPosition().DistanceSquared(itemPtr->GetPosition()) < pow(player->GetSight(), 2))
 						{
-							itemPtr->Description();
-							itemFound = true;
-							break;
+							if (command.Substring(lookIndex + 4, command.Length()).Find(itemPtr->GetName()))
+							{
+								itemPtr->Description();
+								itemFound = true;
+								break;
+							}
 						}
 					}
 				}
 			}
-			
+
 			if (!itemFound) {
 				Vec2I direction = GetDirectionFromInput(command);
-				Item* itemPtr = rooms[currentRoomY][currentRoomX].GetItem(player->GetPosition() + direction);
+				Item* itemPtr = GetCurrentRoom()->GetItem(player->GetPosition() + direction);
 				if (itemPtr != nullptr) {
 					itemPtr->Description();
+					player->FaceDirection(direction);
 				}
 
 				else
 				{
 					lastActionText = "There is nothing there.";
+					player->FaceDirection(direction);
 				}
 			}
 		}
@@ -194,23 +197,68 @@ void Game::Run() {
 			{
 				if (player->GetMana() >= 5)
 				{
+
 					int i = 0;
-					for (i = 0; i < 5; i++) {
-						if (GetMovementBlocked(player->GetPosition() + player->GetDirectionVector() * (i + 1)))
+					bool wallHit = false;
+					bool teleport = false;
+					for (i; i <= 3; i++) {
+						//Player pos, plus direction * i+1
+						//At i = 0, check 1 tile in front. At i = 5, check the 6th tile.
+						if (GetMovementBlocked(player->GetPosition() + (player->GetDirectionVector() * (i + 1)), 1)) {
+							//Wall hit
+							wallHit = true;
+							teleport = true;
+							break;
+						}
+						if (i == 3) { teleport = true; }
+					}
+
+					
+					for (i; i > 0; i--) {
+						if (!GetMovementBlocked(player->GetPosition() + (player->GetDirectionVector() * (i)), 0))
 						{
+							teleport = true;
 							break;
 						}
 					}
+					
 
-					if (i == 0) {
-						lastActionText = "You cast teleport but theres nowhere to go.";
-					}
-					else {
-						player->SetPosition(player->GetPosition() + player->GetDirectionVector() * i);
+					if (teleport && i != 0) {
+						player->SetPosition(player->GetPosition() + (player->GetDirectionVector() * i));
 						player->SetMana(player->GetMana() - 5);
 						lastActionText = "You successfully cast teleport.";
 						useTurn = true;
 					}
+
+					else {
+						lastActionText = "You cast teleport but there's nowhere to go.";
+					}
+
+					//int i = 0;
+					//bool hasHitWall = false;
+					//for (i = 0; i < 3; i++) {
+					//	if (GetMovementBlocked(player->GetPosition() + (player->GetDirectionVector() * (i + 1)), 1))
+					//	{
+					//		hasHitWall = true;
+					//		//break;
+					//	}
+					//}
+
+					//if (i == 0) {
+					//	lastActionText = "You cast teleport but theres nowhere to go.";
+					//}
+					//
+					//else {
+					//	for (i; i > 0; i--) {
+					//		if (!(GetMovementBlocked(player->GetPosition() + (player->GetDirectionVector() * (i)), 0)))
+					//		{
+					//			player->SetPosition(player->GetPosition() + (player->GetDirectionVector() * i));
+					//			player->SetMana(player->GetMana() - 5);
+					//			lastActionText = "You successfully cast teleport.";
+					//			useTurn = true;
+					//		}
+					//	}
+					//}
 				}
 				else {
 					lastActionText = "You do not have enough mana to cast teleport.";
@@ -306,7 +354,7 @@ void Game::UpdateDisplay()
 			guardPtr->UpdateConePoints();
 			for (int i = 0; i < guardPtr->GetViewWidth(); i++) 
 			{
-				IsLineClear(guardPtr->GetPosition() + guardPtr->GetDirectionVector(), guardPtr->GetConePoints()[i]);
+				PlotLine(guardPtr->GetPosition() + guardPtr->GetDirectionVector(), guardPtr->GetConePoints()[i]);
 			}
 		}
 	}
@@ -332,7 +380,7 @@ void Game::UpdateDisplay()
 
 			//Check if the player can see the tile.
 			LineDrawFunction = &GetSightBlocked;
-			if (!IsLineClear(player->GetPosition(),currentTilePos)) {
+			if (!PlotLine(player->GetPosition(),currentTilePos)) {
 				
 				printParams += "m   \033[m";
 				continue;
@@ -400,7 +448,7 @@ void Game::UpdateDisplay()
 			for (Guard* guardPtr : currentRoomPtr->m_guards) {
 				if (empty && guardPtr != nullptr) {
 					if (currentTilePos == guardPtr->GetPosition()) {
-						if (IsLineClear(guardPtr->GetPosition(), player->GetPosition())
+						if (PlotLine(guardPtr->GetPosition(), player->GetPosition())
 							&& currentRoomPtr->GetTileIsLit(player->GetPosition()))
 						{ 
 							//Add logic to spot player
@@ -455,34 +503,33 @@ void Game::SetupRooms()
 	rooms[0, 0]->m_items.push_back(new Coin(Vec2I(4, 1)));
 	rooms[0, 0]->m_items.push_back(new ManaPotion(Vec2I(1, 3)));
 	rooms[0, 0]->m_items.push_back(new Door(Vec2I(12, 0)));
-	rooms[0, 0]->m_items.push_back(new Door(Vec2I(15, 5), false, Vec2I(0,1), Vec2I(3,3), 1));
+	rooms[0, 0]->m_items.push_back(new Door(Vec2I(15, 5), false, Vec2I(0,1), Vec2I(1,5), 1));
 	rooms[0, 0]->m_guards.push_back(new Guard(Vec2I(12, 5), 2));
 
 	tiles = new int[16 * 16]{
-		2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,
-		2,1,1,1,1,1,1,1,0,2,0,0,0,0,0,2,
-		2,1,0,0,0,0,0,0,0,2,0,0,0,0,0,2,
-		2,1,0,0,0,0,0,0,0,0,0,0,2,0,0,2,
-		2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,
-		2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,1,
-		2,0,2,0,2,0,2,1,1,2,0,0,2,0,0,2,
-		2,0,2,0,2,0,2,0,0,2,0,0,0,0,0,2,
-		2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,
-		2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
-		2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,2,
-		2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
-		2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,2,
-		2,0,2,0,2,0,2,0,0,2,0,0,0,0,0,2,
-		2,0,2,0,2,0,2,1,1,2,0,0,0,0,0,2,
-		2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,
+		2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+		2,1,1,1,1,1,1,1,1,1,1,2,1,1,1,2,
+		2,1,0,0,0,0,0,0,0,0,0,2,0,0,1,2,
+		2,1,0,0,1,1,1,0,0,0,0,0,0,0,1,2,
+		2,0,0,0,1,1,1,0,0,0,0,2,0,0,1,2,
+		1,0,0,0,0,0,0,0,0,0,0,2,1,1,1,2,
+		2,1,1,1,1,1,1,1,1,0,0,2,2,2,2,2,
+		2,1,0,0,0,0,0,0,0,0,0,1,1,1,1,2,
+		2,1,0,0,1,1,1,1,2,0,0,0,0,0,1,2,
+		2,1,0,0,1,1,1,1,2,0,0,0,0,0,1,2,
+		2,1,0,0,0,0,0,0,0,0,0,1,1,0,1,2,
+		2,1,0,0,1,1,1,1,2,0,0,1,1,0,1,2,
+		2,1,0,0,1,1,1,1,2,0,0,1,1,0,1,2,
+		2,1,0,0,0,0,0,0,0,0,0,0,0,0,1,2,
+		2,1,1,1,1,1,1,1,1,0,0,0,0,0,1,2,
+		2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,
 	};
 
 	rooms[0, 1]->m_tiles = tiles;
 	rooms[0, 1]->m_items.push_back(new Coin(Vec2I(4, 1)));
 	rooms[0, 1]->m_items.push_back(new ManaPotion(Vec2I(1, 3)));
-	rooms[0, 1]->m_items.push_back(new Door(Vec2I(12, 0)));
-	rooms[0, 1]->m_items.push_back(new Door(Vec2I(15, 5), false, Vec2I(0, 0), Vec2I(3, 3), 1));
-	rooms[0, 1]->m_guards.push_back(new Guard(Vec2I(12, 12), 0));
+	rooms[0, 1]->m_items.push_back(new Door(Vec2I(0, 5), false, Vec2I(0, 0), Vec2I(14, 5), 1));
+	rooms[0, 1]->m_guards.push_back(new Guard(Vec2I(10, 12), 0));
 }
 
 Room* Game::GetRoom(const int x, const int y) {
@@ -517,27 +564,6 @@ Player* Game::GetPlayer() {
 	return player;
 }
 
-//Adjust this later to work for enemies too.
-bool Game::IsLineClear(Vec2I a_start, Vec2I a_end)
-{
-	if (abs(a_end.Y - a_start.Y) < abs(a_end.X - a_start.X))
-	{
-		if (a_start.X > a_end.X)
-		{
-			return PlotLineLow(a_end, a_start);
-		}
-		else return PlotLineLow(a_start, a_end);
-	}
-	else 
-	{
-		if (a_start.Y > a_end.Y) {
-			return PlotLineHigh(a_end, a_start);
-		}
-		else {
-			return PlotLineHigh(a_start, a_end);
-		}
-	}
-}
 
 bool Game::CheckClearLine(Vec2I start, Vec2I direction) {
 	int x0 = start.X;
@@ -562,72 +588,46 @@ bool Game::CheckClearLine(Vec2I start, Vec2I direction) {
 	return false;
 }
 
-//For shallow slopes. Where Y will increase/decrease by only 1 value at a time.
-//Y is a function of X
-bool Game::PlotLineLow(Vec2I start, Vec2I end) {
-	int dx = end.X - start.X;
-	int dy = end.Y - start.Y;
-	int yi = 1; // This determines whether the next y is up or down.
-	
-	if (dy < 0) {
-		yi = -1;
-		dy = -dy;
-	}
-	int D = (2 * dy) - dx; 
-	//D returns a signed int. It is used to determine whether to stay at the same y
-	//Or move according up/down according to yi
-	int y = start.Y;
 
-	for (int x = start.X; x < end.X; x++) {
-		//Break on a return true. Use this for setting tiles in light cone
-		//And for determining clear sightlines.
-		if (LineDrawFunction(Vec2I(x, y))) return false;
-		if (D > 0) {
-			y = y + yi;
-			D = D + (2 * (dy - dx));
-		}
-		else {
-			D = D + 2 * dy;
-		}
-	}
-
-	return true;
-}
-
-//For steep slopes where x is increasing by 1 or 2. 
-//X is a function of Y.
+//Does all slopes and directions. Has replaced the old functions.
 //Returns a new list of Vec2I positions.
-bool Game::PlotLineHigh(Vec2I start, Vec2I end) {
-	int dx = end.X - start.X;
-	int dy = end.Y - start.Y;
-	int xi = 1; // This determines whether the next y is up or down.
+bool Game::PlotLine(Vec2I start, Vec2I end) {
+	int x0 = start.X;
+	int y0 = start.Y;
+	int x1 = end.X;
+	int y1 = end.Y;
+	
+	
+	
+	int dx = abs(x1 - x0);
+	int sx = x0 < x1 ? 1 : -1;
+	int dy = -abs(y1 - y0);
+	int sy = y0 < y1 ? 1 : -1;
+	int error = dx + dy;
+	//int xi = 1; // This determines whether the next y is up or down.
 
-	if (dx < 0) {
-		xi = -1;
-		dx = -dx;
-	}
-	int D = (2 * dx) - dy;
-	//D returns a signed int. It is used to determine whether to stay at the same y
-	//Or move according up/down according to yi
-	int x = start.X;
 
-
-	for (int y = start.Y; y < end.Y; y++) {
-		//Break on a return true. Use this for setting tiles in light cone
-		//And for determining clear sightlines.
-		if (LineDrawFunction(Vec2I(x, y))) return false;
-		//if (rooms[currentRoomY][currentRoomX].GetTileState(Vec2I(x, y)) == 2) return false;
-		if (D > 0) {
-			x = x + xi;
-			D = D + (2 * (dx - dy));
+	while (true) {
+		//Plot thing.
+		if (LineDrawFunction(Vec2I(x0, y0))) return false;
+		if (x0 == x1 && y0 == y1) break;
+		int e2 = error * 2;
+		if (e2 >= dy) {
+			if (x0 == x1) break;
+			error += dy;
+			x0 += sx;
 		}
-		else {
-			D = D + 2 * dx;
+		if (e2 <= dx) {
+			if (y0 == y1) break;
+			error += dx;
+			y0 += sy;
 		}
 	}
-
 	return true;
 }
+
+
+
 
 //These are all very slightly different
 
@@ -653,7 +653,16 @@ bool GetLightBlocked(Vec2I a_position) {
 
 bool Game::GetMovementBlocked(Vec2I a_position) {
 
-	if (GetCurrentRoom()->GetTileState(a_position) != 0 || player->GetPosition() == a_position)
+	return GetMovementBlocked(a_position, 0);
+}
+
+//Allows up to a_freeTiles to be moved through.
+//i.e. a value of 0 means obstacles block.
+//a value of 1 lets the player pass through/over obstacles
+//a value of 2 or higher lets the player noclip.
+bool Game::GetMovementBlocked(Vec2I a_position, int a_freeTiles) {
+
+	if (GetCurrentRoom()->GetTileState(a_position) > a_freeTiles || player->GetPosition() == a_position)
 	{
 		return true;
 	}

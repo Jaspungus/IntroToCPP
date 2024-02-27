@@ -53,6 +53,7 @@ public:
 
 	Player* GetPlayer();
 	bool GetMovementBlocked(Vec2I a_position);
+	bool GetMovementBlocked(Vec2I a_position, int a_freeTiles);
 
 private:
 	void SetupRooms();
@@ -60,9 +61,7 @@ private:
 	void UpdateDisplay();
 	Vec2I GetDirectionFromInput(const String& command) const;
 
-	bool IsLineClear(Vec2I a_start, Vec2I a_end);
-	bool PlotLineLow(Vec2I start, Vec2I end);
-	bool PlotLineHigh(Vec2I start, Vec2I end);
+	bool PlotLine(Vec2I start, Vec2I end);
 
 //Function Pointer Functions
 //Dude I am probably breaking OOP rules so hard
