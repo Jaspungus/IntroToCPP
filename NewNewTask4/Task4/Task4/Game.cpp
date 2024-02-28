@@ -96,7 +96,7 @@ void Game::Run() {
 			else player->FaceDirection(direction);
 
 			//Check if an item is present.
-			Item* itemPtr = rooms[currentRoomY][currentRoomX].GetItem(player->GetPosition() + direction);
+			Item* itemPtr = GetCurrentRoom()->GetItem(player->GetPosition() + direction);
 			if (itemPtr != nullptr) {
 
 				//Repeated once. Could make function.
@@ -480,7 +480,7 @@ void Game::UpdateDisplay()
 //It will only get worse as time goes on. ^ This was written before I added items.
 void Game::SetupRooms()
 {
-	int* tiles = new int[16*16]{
+	int* tiles00 = new int[16*16]{
 		2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,
 		2,1,1,1,1,1,1,1,0,2,0,0,0,0,0,2,
 		2,1,0,0,0,0,0,0,0,2,0,0,0,0,0,2,
@@ -499,14 +499,15 @@ void Game::SetupRooms()
 		2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,
 	};
 
-	rooms[0, 0]->m_tiles = tiles;
-	rooms[0, 0]->m_items.push_back(new Coin(Vec2I(4, 1)));
-	rooms[0, 0]->m_items.push_back(new ManaPotion(Vec2I(1, 3)));
-	rooms[0, 0]->m_items.push_back(new Door(Vec2I(12, 0)));
-	rooms[0, 0]->m_items.push_back(new Door(Vec2I(15, 5), false, Vec2I(0,1), Vec2I(1,5), 1));
-	rooms[0, 0]->m_guards.push_back(new Guard(Vec2I(12, 5), 2));
+	rooms[0][0].m_tiles = tiles00;
+	rooms[0][0].m_items.push_back(new Coin(Vec2I(4, 1)));
+	rooms[0][0].m_items.push_back(new ManaPotion(Vec2I(1, 3)));
+	rooms[0][0].m_items.push_back(new Door(Vec2I(12, 0)));
+	rooms[0][0].m_items.push_back(new Door(Vec2I(15, 5), false, Vec2I(1,0), Vec2I(1,5), 1));
+	rooms[0][0].m_items.push_back(new Door(Vec2I(12, 15), false, Vec2I(0,1), Vec2I(12, 1), 2));
+	rooms[0][0].m_guards.push_back(new Guard(Vec2I(12, 5), 2));
 
-	tiles = new int[16 * 16]{
+	int* tiles01 = new int[16 * 16]{
 		2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
 		2,1,1,1,1,1,1,1,1,1,1,2,1,1,1,2,
 		2,1,0,0,0,0,0,0,0,0,0,2,0,0,1,2,
@@ -525,11 +526,64 @@ void Game::SetupRooms()
 		2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,
 	};
 
-	rooms[0, 1]->m_tiles = tiles;
-	rooms[0, 1]->m_items.push_back(new Coin(Vec2I(4, 1)));
-	rooms[0, 1]->m_items.push_back(new ManaPotion(Vec2I(1, 3)));
-	rooms[0, 1]->m_items.push_back(new Door(Vec2I(0, 5), false, Vec2I(0, 0), Vec2I(14, 5), 1));
-	rooms[0, 1]->m_guards.push_back(new Guard(Vec2I(10, 12), 0));
+	rooms[0][1].m_tiles = tiles01;
+	rooms[0][1].m_items.push_back(new Coin(Vec2I(4, 1)));
+	rooms[0][1].m_items.push_back(new ManaPotion(Vec2I(1, 3)));
+	rooms[0][1].m_items.push_back(new Door(Vec2I(0, 5), false, Vec2I(0, 0), Vec2I(14, 5), 1));
+	rooms[0][1].m_items.push_back(new Door(Vec2I(13, 15), false, Vec2I(0, 1), Vec2I(13, 1), 1));
+	rooms[0][1].m_guards.push_back(new Guard(Vec2I(10, 12), 0));
+
+	int* tiles10 = new int[16 * 16] {
+		2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,
+		2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
+		2,0,0,0,0,0,0,0,0,1,1,0,0,0,0,2,
+		2,1,1,0,2,0,0,0,2,1,1,0,0,0,0,1,
+		2,1,1,0,0,1,1,0,0,0,0,0,0,0,0,1,
+		2,0,0,0,0,1,1,0,0,0,0,0,0,0,0,2,
+		2,0,0,0,0,0,0,0,0,1,1,0,1,1,1,2,
+		2,1,1,0,2,0,0,0,2,1,1,0,1,0,0,2,
+		2,1,1,0,0,1,1,0,0,0,0,0,1,0,0,2,
+		2,0,0,0,0,1,1,0,0,0,0,0,1,0,0,1,
+		2,0,0,0,0,0,0,0,0,1,1,0,1,0,0,2,
+		2,1,1,0,2,0,0,0,2,1,1,0,1,1,0,2,
+		2,1,1,0,0,1,1,0,0,0,0,0,0,0,0,2,
+		2,0,0,0,0,1,1,0,1,1,0,0,0,0,0,2,
+		2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
+		2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,
+		};
+
+	rooms[1][0].m_tiles = tiles10;
+	rooms[1][0].m_items.push_back(new Door(Vec2I(12, 0), false, Vec2I(0, 0), Vec2I(12, 14), 0));
+	rooms[1][0].m_items.push_back(new Door(Vec2I(15, 4), false, Vec2I(1, 1), Vec2I(1, 4), 1));
+	rooms[1][0].m_items.push_back(new Door(Vec2I(15, 5), false, Vec2I(1, 1), Vec2I(1, 5), 1));
+	//SetupExitDoorClass
+	//rooms[1, 0]->m_items.push_back(new Door(Vec2I(15, 7), false, Vec2I(0, 0), Vec2I(14, 5), 1));
+	//rooms[1, 0]->m_items.push_back(new Door(Vec2I(15, 8), false, Vec2I(0, 0), Vec2I(14, 5), 1));
+
+	int* tiles11 = new int[16 * 16] {
+		2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,
+		2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
+		2,0,0,0,0,0,0,0,0,2,1,1,0,1,1,2,
+		1,0,0,0,0,0,1,1,0,2,1,1,0,1,1,2,
+		1,0,0,0,0,0,1,1,0,0,0,0,0,0,0,2,
+		2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
+		2,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,
+		2,0,0,1,0,0,0,0,0,2,1,1,0,1,1,2,
+		2,0,0,1,0,0,1,1,0,2,1,1,0,1,1,2,
+		1,0,0,1,0,0,1,1,0,0,0,0,0,0,0,2,
+		2,0,0,1,0,0,0,0,0,0,0,0,0,0,0,2,
+		2,0,1,1,0,0,0,0,0,0,0,0,0,0,0,2,
+		2,0,0,0,0,0,0,0,0,2,1,1,0,1,1,2,
+		2,0,0,0,0,0,1,1,0,2,1,1,0,1,1,2,
+		2,0,0,0,0,0,1,1,0,0,0,0,0,0,0,2,
+		2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+	};
+
+	rooms[1][1].m_tiles = tiles11;
+
+	rooms[1][1].m_items.push_back(new Door(Vec2I(13, 0), false, Vec2I(1, 0), Vec2I(13, 14), 0));
+	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 4), false, Vec2I(0, 1), Vec2I(14, 4), 1));
+	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 5), false, Vec2I(0, 1), Vec2I(14, 5), 1));
 }
 
 Room* Game::GetRoom(const int x, const int y) {
@@ -632,12 +686,11 @@ bool Game::PlotLine(Vec2I start, Vec2I end) {
 //These are all very slightly different
 
 bool GetSightBlocked(Vec2I a_position) {
+
 	if (Game::GetInstance()->GetCurrentRoom()->GetTileState(a_position) == 2) return true;
 	return false;
 }
 
-//Fundamental flaw in the line drawing logic. Half the time (based on the two coords)
-//It will draw from the target to the origin, causing strange shadows. FIX
 //Players and guards won't cast shadows now too. Can be reversed with GetMovementBlocked.
 bool GetLightBlocked(Vec2I a_position) {
 
