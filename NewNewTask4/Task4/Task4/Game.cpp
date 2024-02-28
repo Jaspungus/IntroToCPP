@@ -226,42 +226,16 @@ void Game::Run() {
 					if (teleport && i != 0) {
 						player->SetPosition(player->GetPosition() + (player->GetDirectionVector() * i));
 						player->SetMana(player->GetMana() - 5);
-						lastActionText = "You successfully cast teleport.";
+						lastActionText = "You successfully cast \"Teleport\".";
 						useTurn = true;
 					}
 
 					else {
-						lastActionText = "You cast teleport but there's nowhere to go.";
+						lastActionText = "You cast \"Teleport\" but there's nowhere to go.";
 					}
-
-					//int i = 0;
-					//bool hasHitWall = false;
-					//for (i = 0; i < 3; i++) {
-					//	if (GetMovementBlocked(player->GetPosition() + (player->GetDirectionVector() * (i + 1)), 1))
-					//	{
-					//		hasHitWall = true;
-					//		//break;
-					//	}
-					//}
-
-					//if (i == 0) {
-					//	lastActionText = "You cast teleport but theres nowhere to go.";
-					//}
-					//
-					//else {
-					//	for (i; i > 0; i--) {
-					//		if (!(GetMovementBlocked(player->GetPosition() + (player->GetDirectionVector() * (i)), 0)))
-					//		{
-					//			player->SetPosition(player->GetPosition() + (player->GetDirectionVector() * i));
-					//			player->SetMana(player->GetMana() - 5);
-					//			lastActionText = "You successfully cast teleport.";
-					//			useTurn = true;
-					//		}
-					//	}
-					//}
 				}
 				else {
-					lastActionText = "You do not have enough mana to cast teleport.";
+					lastActionText = "You do not have enough mana to cast \"Teleport\".";
 				}
 			}
 			else if (command.Find(castIndex + 4, "Shock") != -1)
@@ -280,7 +254,7 @@ void Game::Run() {
 			}
 			else if (command.Find(castIndex + 4, "Yellow") != -1)
 			{
-				std::cout << "You cast \"Yellow\"" << std::endl;
+				lastActionText = "You cast \"Yellow\"";
 				useTurn = true;
 			}
 		}
@@ -554,8 +528,9 @@ void Game::SetupRooms()
 
 	rooms[1][0].m_tiles = tiles10;
 	rooms[1][0].m_items.push_back(new Door(Vec2I(12, 0), false, Vec2I(0, 0), Vec2I(12, 14), 0));
+	rooms[1][0].m_items.push_back(new Door(Vec2I(15, 3), false, Vec2I(1, 1), Vec2I(1, 3), 1));
 	rooms[1][0].m_items.push_back(new Door(Vec2I(15, 4), false, Vec2I(1, 1), Vec2I(1, 4), 1));
-	rooms[1][0].m_items.push_back(new Door(Vec2I(15, 5), false, Vec2I(1, 1), Vec2I(1, 5), 1));
+	rooms[1][0].m_items.push_back(new Door(Vec2I(15, 9), false, Vec2I(1, 1), Vec2I(1, 9), 1));
 	//SetupExitDoorClass
 	//rooms[1, 0]->m_items.push_back(new Door(Vec2I(15, 7), false, Vec2I(0, 0), Vec2I(14, 5), 1));
 	//rooms[1, 0]->m_items.push_back(new Door(Vec2I(15, 8), false, Vec2I(0, 0), Vec2I(14, 5), 1));
@@ -582,8 +557,9 @@ void Game::SetupRooms()
 	rooms[1][1].m_tiles = tiles11;
 
 	rooms[1][1].m_items.push_back(new Door(Vec2I(13, 0), false, Vec2I(1, 0), Vec2I(13, 14), 0));
+	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 3), false, Vec2I(0, 1), Vec2I(14, 3), 1));
 	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 4), false, Vec2I(0, 1), Vec2I(14, 4), 1));
-	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 5), false, Vec2I(0, 1), Vec2I(14, 5), 1));
+	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 9), false, Vec2I(0, 1), Vec2I(14, 9), 1));
 }
 
 Room* Game::GetRoom(const int x, const int y) {

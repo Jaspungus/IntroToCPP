@@ -6,7 +6,7 @@ Coin::Coin(Vec2I a_position)
 	position = a_position;
 	m_name = "Coin";
 	colour = 178;
-	icon = 'o';
+	icon = '.';
 	stationary = false;
 	value = 1;
 }
