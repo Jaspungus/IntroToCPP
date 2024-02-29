@@ -139,7 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AStar.cpp" />
+    <ClCompile Include="AStarPathFinder.cpp" />
     <ClCompile Include="Coin.cpp" />
     <ClCompile Include="Door.cpp" />
     <ClCompile Include="ExitDoor.cpp" />
@@ -155,6 +155,7 @@
     <ClCompile Include="Vec2.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AStarPathFinder.h" />
     <ClInclude Include="Coin.h" />
     <ClInclude Include="Door.h" />
     <ClInclude Include="ExitDoor.h" />

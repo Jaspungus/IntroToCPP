@@ -16,6 +16,7 @@ Guard::Guard(Vec2I a_position, int a_direction) {
 Guard::~Guard()
 {
 	delete[] m_conePoints;
+	delete m_AStar;
 }
 
 const Vec2I Guard::GetPosition() const {
@@ -117,4 +118,8 @@ void Guard::UpdateConePoints() {
 		m_conePoints[i] = centrePoint + GetDirectionVector().Perpindicular() * (m_viewWidth / 2) + -GetDirectionVector().Perpindicular() * i;
 		if (i > 0 && i < m_viewWidth - 1) m_conePoints[i] += GetDirectionVector();
 	}
+}
+
+void Guard::GeneratePath(int* tiles, Vec2I a_destination) {
+	//m_AStar.AStarSearch(tiles, m_position, a_destination);
 }

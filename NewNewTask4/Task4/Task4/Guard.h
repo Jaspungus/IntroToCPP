@@ -1,6 +1,7 @@
 #pragma once
 #include "Vec2.h"
 #include "String.h"
+#include "AStarPathFinder.h"
 
 class Guard
 {
@@ -21,6 +22,7 @@ private:
 	int m_viewDistance = 8;
 	int m_viewWidth = 5;
 	Vec2I* m_conePoints = new Vec2I[m_viewWidth];
+	AStarPathFinder* m_AStar = new AStarPathFinder();
 
 public:
 	char m_icon = '^';
@@ -47,5 +49,7 @@ public:
 	const int GetViewWidth() const;
 	const Vec2I* GetConePoints() const;
 	void UpdateConePoints();
+
+	void GeneratePath(int* tiles, Vec2I a_destination);
 };
 

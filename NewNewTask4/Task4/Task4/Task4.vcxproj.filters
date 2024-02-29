@@ -57,11 +57,11 @@
     <ClCompile Include="Door.cpp">
       <Filter>Source Files\Items</Filter>
     </ClCompile>
-    <ClCompile Include="AStar.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ExitDoor.cpp">
       <Filter>Source Files\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="AStarPathFinder.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -99,6 +99,9 @@
       <Filter>Header Files\Items</Filter>
     </ClInclude>
     <ClInclude Include="ExitDoor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AStarPathFinder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

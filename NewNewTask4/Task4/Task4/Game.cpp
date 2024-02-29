@@ -356,8 +356,8 @@ void Game::UpdateDisplay()
 			LineDrawFunction = &GetSightBlocked;
 			if (!PlotLine(player->GetPosition(),currentTilePos)) {
 				
-				printParams += "m   \033[m";
-				continue;
+				//printParams += "m   \033[m";
+				//continue;
 				//state = 2; //This makes it so icons still appear.
 			}
 			//All within, if in sight.
