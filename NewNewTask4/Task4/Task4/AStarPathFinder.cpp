@@ -33,15 +33,18 @@ int AStarPathFinder::CalculateHeuristic(Vec2I a_position, Vec2I a_goal)
 
 
 
-std::stack<std::pair<int, int>> AStarPathFinder::TracePath(Vec2I a_destination)
+void AStarPathFinder::TracePath(Guard* guardPtr, Vec2I a_destination)
 {
-	int row = a_destination.Y;
-	int col = a_destination.X;
+	int row = a_destination.X;
+	int col = a_destination.Y;
 
-	stack<std::pair<int,int>> path;
+	while (!guardPtr->path.empty()) {
+		guardPtr->path.pop();
+	}
+	
 
-	while (cellDetails[row][col].parentPos.Y != row && cellDetails[row][col].parentPos.X != col) {
-		path.push(make_pair(row, col));
+	while (!(cellDetails[row][col].parentPos.X == row && cellDetails[row][col].parentPos.Y == col)) {
+		guardPtr->path.push(make_pair(row, col));
 		int temp_row = cellDetails[row][col].parentPos.X;
 		int temp_col = cellDetails[row][col].parentPos.Y;
 		row = temp_row;
@@ -50,9 +53,7 @@ std::stack<std::pair<int, int>> AStarPathFinder::TracePath(Vec2I a_destination)
 
 
 
-	path.push(make_pair(row, col));
-
-	return path;
+	guardPtr->path.push(make_pair(row, col));
 }
 
 void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_destination)
@@ -63,10 +64,8 @@ void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_desti
 	if (IsBlocked(guardPtr, a_source) || IsBlocked(guardPtr, a_destination)) { std::cout << "Source or destination blocked." << std::endl; return; }
 	if (IsDestination(a_source, a_destination)) { std::cout << "Already at Destination" << std::endl; return; }
 
-	int* tiles = Game::GetInstance()->GetCurrentRoom()->m_tiles;
-
 	//Closed list of all the tiles to ignore. This will start as empty. It is a 2D array the size of the map.
-	bool closedList[MAPX][MAPY];
+	bool closedList[MAPY][MAPX];
 	memset(closedList, false, sizeof(closedList)); //?????
 
 	//An array of the cell structure to hold informationa about each cells heuristic and whatever g is.
@@ -80,22 +79,22 @@ void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_desti
 
 	//Initialise each cell to 0
 
-	for (int i = 0; i < MAPX; i++) {
-		for (int j = 0; j < MAPY; j++) {
+	for (i = 0; i < MAPY; i++) {
+		for (j = 0; j < MAPX; j++) {
 			cellDetails[i][j].f = INT_MAX;
 			cellDetails[i][j].g = INT_MAX;
 			cellDetails[i][j].h = INT_MAX;
-			cellDetails[i][j].parentPos = Vec2I::Zero();
+			cellDetails[i][j].parentPos = -Vec2I::One();
 		}
 	}
 
 	//Dude i dont know how this works
 	i = a_source.X, j = a_source.Y;
 
-	cellDetails[i][j].f = INT_MAX;
-	cellDetails[i][j].g = INT_MAX;
-	cellDetails[i][j].h = INT_MAX;
-	cellDetails[i][j].parentPos = Vec2I::Zero();
+	cellDetails[i][j].f = 0;
+	cellDetails[i][j].g = 0;
+	cellDetails[i][j].h = 0;
+	cellDetails[i][j].parentPos = Vec2I(i,j);
 
 
 	set<std::pair<int, std::pair<int,int>>> openList;
@@ -121,7 +120,7 @@ void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_desti
 
 		// fuck if i know 
 
-		int gNew, hNew, fNew;
+		int gNew = 0, hNew = 0, fNew = 0;
 
 
 		//North
@@ -139,6 +138,8 @@ void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_desti
 				gNew = cellDetails[i][j].g + 1;
 				hNew = CalculateHeuristic(Vec2I(i - 1, j), a_destination);
 				fNew = gNew + hNew;
+			//	if (gNew < 0) gNew = INT_MAX;
+			//	if (fNew < 0) fNew = INT_MAX;
 
 				//If it is not on the open list, add it and make the current square it's parent.
 				//If record f,g,h
@@ -157,28 +158,30 @@ void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_desti
 		}
 
 		//South
-		if (IsValid(Vec2I(i - 1, j))) {
-			if (IsDestination(Vec2I(i - 1, j), a_destination))
+		if (IsValid(Vec2I(i + 1, j))) {
+			if (IsDestination(Vec2I(i + 1, j), a_destination))
 			{
-				cellDetails[i - 1][j].parentPos = Vec2I(i, j);
+				cellDetails[i + 1][j].parentPos = Vec2I(i, j);
 				std::cout << "found it" << std::endl;
 				//Trace path????
 				foundDest = true;
 				return;
 			}
 
-			else if (!closedList[i - 1][j] && !IsBlocked(guardPtr, Vec2I(i + 1, j))) {
+			else if (!closedList[i + 1][j] && !IsBlocked(guardPtr, Vec2I(i + 1, j))) {
 				gNew = cellDetails[i][j].g + 1;
-				hNew = CalculateHeuristic(Vec2I(i - 1, j), a_destination);
+				hNew = CalculateHeuristic(Vec2I(i + 1, j), a_destination);
 				fNew = gNew + hNew;
+			//	if (gNew < 0) gNew = INT_MAX;
+			//	if (fNew < 0) fNew = INT_MAX;
 
 				//If it is not on the open list, add it and make the current square it's parent.
 				//If record f,g,h
 				//OR
 				//If it is on the list, check if the path to that square is better, measuring with f.
 
-				if (cellDetails[i + 1][j].f == INT_MAX || cellDetails[i - 1][j].f > fNew) {
-					openList.insert(make_pair(fNew, make_pair(i - 1, j)));
+				if (cellDetails[i + 1][j].f == INT_MAX || cellDetails[i + 1][j].f > fNew) {
+					openList.insert(make_pair(fNew, make_pair(i + 1, j)));
 
 					cellDetails[i + 1][j].f = fNew;
 					cellDetails[i + 1][j].g = gNew;
@@ -203,6 +206,8 @@ void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_desti
 				gNew = cellDetails[i][j + 1].g + 1;
 				hNew = CalculateHeuristic(Vec2I(i, j + 1), a_destination);
 				fNew = gNew + hNew;
+				//if (gNew < 0) gNew = INT_MAX;
+				//if (fNew < 0) fNew = INT_MAX;
 
 				//If it is not on the open list, add it and make the current square it's parent.
 				//If record f,g,h
@@ -236,6 +241,8 @@ void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_desti
 				gNew = cellDetails[i][j - 1].g + 1;
 				hNew = CalculateHeuristic(Vec2I(i, j - 1), a_destination);
 				fNew = gNew + hNew;
+			//	if (gNew < 0) gNew = INT_MAX;
+			//	if (fNew < 0) fNew = INT_MAX;
 
 				//If it is not on the open list, add it and make the current square it's parent.
 				//If record f,g,h

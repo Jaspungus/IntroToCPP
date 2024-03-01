@@ -25,7 +25,7 @@ public:
 	~AStarPathFinder();
 
 public:
-	std::stack<std::pair<int,int>> TracePath(Vec2I a_destination);
+	void TracePath(Guard* guardPtr, Vec2I a_destination);
 	void AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_destination);
 
 private:

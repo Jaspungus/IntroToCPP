@@ -344,25 +344,17 @@ void Game::UpdateDisplay()
 			if (guardPtr->GetState() != 4)
 			{
 
-				std::cout << guardPtr->GetState();
-
 				if (PlotLine(guardPtr->GetPosition(), player->GetPosition())
 					&& GetCurrentRoom()->GetTileIsLit(player->GetPosition()))
 				{
-					//Put into the setSees func;
 
-					lastActionText = "You were spotted! Get out of sight!";
-
-					guardPtr->SetSeesPlayer(true);
 					guardPtr->GeneratePath(player->GetPosition());
-					//Add logic to spot player
+					lastActionText = "You were spotted!";
+
+					//Player loses
 				}
 
-				else guardPtr->SetSeesPlayer(false);
-
-
 				guardPtr->UpdateState();
-				//guardPtr->UpdateBehaviour();
 			}
 		}
 	}

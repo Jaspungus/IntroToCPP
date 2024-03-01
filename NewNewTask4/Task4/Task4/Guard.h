@@ -28,7 +28,7 @@ private:
 	
 	//AI stuff
 	AStarPathFinder* m_AStar = new AStarPathFinder();
-	std::stack<std::pair<int, int>> path;
+
 
 	bool m_seesPlayer; //for if they have at some point seen the player.
 	bool m_hasSeenPlayer;
@@ -47,6 +47,8 @@ private:
 
 public:
 	char m_icon = '^';
+	std::stack<std::pair<int, int>> path;
+	//God forbid I ask for help to fix something. 
 
 public:
 	Guard();
@@ -72,7 +74,6 @@ public:
 	void UpdateConePoints();
 
 	void UpdateState();
-	void UpdateBehaviour();
 	void SetSeesPlayer(bool alert);
 	int GetState();
 

@@ -55,8 +55,14 @@ void Room::SetTileIsLit(Vec2I a_position, bool a_isLit) {
 	m_litStates[a_position.Y][a_position.X] = a_isLit;
 }
 
-const int Room::GetTileState(Vec2I a_position) const 
+const int Room::GetTileState(Vec2I a_position) const
 {
+	if (a_position.Y < 0 || a_position.Y >= ROOMHEIGHT) { std::cout << "Y coord out of bounds"; return -1; }
+	if (a_position.X < 0) { std::cout << "X coord out of bounds <"; return -1; }
+	else if (a_position.X >= ROOMWIDTH) { std::cout << "X coord out of bounds >"; return -1; }
+
+	if (a_position.Y * ROOMWIDTH + a_position.X >= 256) { std::cout << a_position.Y * ROOMWIDTH + a_position.X << std::endl; return -1;}
+
 	return m_tiles[a_position.Y * ROOMWIDTH + a_position.X];
 }
 

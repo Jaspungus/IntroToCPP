@@ -132,80 +132,45 @@ void Guard::UpdateState() {
 		}
 		else {
 			if (!path.empty()) {
-				SetPosition(Vec2I(path.top().second, path.top().first));
+				SetPosition(Vec2I(path.top().first, path.top().second));
 				path.pop();
 			}
 		}
 
 		break;
-	case Investigating:
-		if (m_position == m_targetPosition) {
-			if (m_hasSeenPlayer) m_state = Paranoid;
-			else m_state = Calm;
-		}
+	//case Investigating:
+	//	if (m_position == m_targetPosition) {
+	//		if (m_hasSeenPlayer) m_state = Paranoid;
+	//		else m_state = Calm;
+	//	}
 
-		//Move along path (should be set to a location)
-		if (!path.empty()) {
-			SetPosition(Vec2I(path.top().second, path.top().first));
-			path.pop();
-		}
+	//	//Move along path (should be set to a location)
+	//	if (!path.empty()) {
+	//		SetPosition(Vec2I(path.top().second, path.top().first));
+	//		path.pop();
+	//	}
 
-		if (m_seesPlayer) { m_state = Alert; break; }
-		break;
-	case Paranoid:
-		if (m_seesPlayer) { m_state = Alert; break; }
+	//	if (m_seesPlayer) { m_state = Alert; break; }
+	//	break;
+	//case Paranoid:
+	//	if (m_seesPlayer) { m_state = Alert; break; }
 
-		//Follow path. Turn round every x turns
-		//Set next node as path, keep a turn counter.
+	//	//Follow path. Turn round every x turns
+	//	//Set next node as path, keep a turn counter.
 
-		break;
-	case Alert:
-		if (!m_seesPlayer) m_state = Paranoid;
-		//else make player lose
-		break;
+	//	break;
+	//case Alert:
+	//	if (!m_seesPlayer) m_state = Paranoid;
+	//	//else make player lose
+	//	break;
 	case Unconscious:
 		break;
 	}
 	std::cout << m_seesPlayer;
 }
 
-void Guard::UpdateBehaviour() 
-{
-	switch (m_state) {
-	case Calm:
-		if (m_position == m_targetPosition) {
-			//Set next node as path
-			
-		}
-		else {
-			if (!path.empty()) {
-				SetPosition(Vec2I(path.top().second, path.top().first));
-				path.pop();
-			}
-		}
-		break;
-	case Investigating:
-		//Move along path (should be set to a location)
-		if (!path.empty()) {
-			SetPosition(Vec2I(path.top().second, path.top().first));
-			path.pop();
-		}
 
-		break;
-	case Paranoid:
-		//Follow path. Turn round every x turns
-		//Set next node as path, keep a turn counter.
-		break;
-	case Alert:
-		if (m_seesPlayer) //Player lose
-		break;
-	case Unconscious:
-		//Just like never do anything.
-		break;
-
-	}
-}
-
+//Vestigial functions from before I gave up on more complex AI.
 void Guard::SetSeesPlayer(bool isAlert) {
 	m_seesPlayer = isAlert;
 	if (m_seesPlayer) m_hasSeenPlayer = true;
@@ -217,7 +182,8 @@ int Guard::GetState() {
 
 
 void Guard::GeneratePath(Vec2I a_destination) {
+
 	m_AStar->AStarSearch(this, m_position, a_destination);
 
-	path = m_AStar->TracePath(a_destination);
+	m_AStar->TracePath(this, a_destination);
 }
