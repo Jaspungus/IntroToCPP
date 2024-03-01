@@ -2,27 +2,48 @@
 #include "Vec2.h"
 #include "String.h"
 #include "AStarPathFinder.h"
+#include <stack>
 
 class Guard
 {
 private:
+	enum AIState {
+		Calm,
+		Investigating,
+		Paranoid,
+		Alert,
+		Unconscious
+	};
+
+private:
 	Vec2I m_position;
-	Vec2I m_targetPosition;
 	int m_direction = 0;
 
 	int m_colour = 88;
 
-	int m_state = 0; 
+	
+	int m_viewDistance = 8;
+	int m_viewWidth = 5;
+	Vec2I* m_conePoints = new Vec2I[m_viewWidth];
+	
+	//AI stuff
+	AStarPathFinder* m_AStar = new AStarPathFinder();
+	std::stack<std::pair<int, int>> path;
+
+	bool m_seesPlayer; //for if they have at some point seen the player.
+	bool m_hasSeenPlayer;
+
+	AIState m_state = Calm;
 	//0 is calm. 
 	//1 is for investigating a noise/sighting. 
 	//2 is for paranoid after seeing an incapacitated guard
 	//3 is when the player is in sight. Player gets 1 turn to escape.
 	//4 is incapacitated
 
-	int m_viewDistance = 8;
-	int m_viewWidth = 5;
-	Vec2I* m_conePoints = new Vec2I[m_viewWidth];
-	AStarPathFinder* m_AStar = new AStarPathFinder();
+	Vec2I m_targetPosition;
+	Vec2I* m_patrolRoute = nullptr;
+
+
 
 public:
 	char m_icon = '^';
@@ -50,6 +71,11 @@ public:
 	const Vec2I* GetConePoints() const;
 	void UpdateConePoints();
 
-	void GeneratePath(int* tiles, Vec2I a_destination);
+	void UpdateState();
+	void UpdateBehaviour();
+	void SetSeesPlayer(bool alert);
+	int GetState();
+
+	void GeneratePath(Vec2I a_destination);
 };
 

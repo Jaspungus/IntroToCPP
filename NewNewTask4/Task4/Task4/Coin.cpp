@@ -16,7 +16,7 @@ Coin::~Coin() {
 }
 
 void Coin::Description() const {
-
+	Item::Description();
 }
 
 void Coin::Use() {

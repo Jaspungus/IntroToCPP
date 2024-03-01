@@ -50,6 +50,7 @@ void Game::Run() {
 
 		//If the last action was successful, use up a turn and update enemies.
 		if (useTurn) {
+
 			useTurn = false;
 			turnCount++;
 		}
@@ -330,6 +331,39 @@ void Game::UpdateDisplay()
 			{
 				PlotLine(guardPtr->GetPosition() + guardPtr->GetDirectionVector(), guardPtr->GetConePoints()[i]);
 			}
+
+		}
+	}
+
+	//Code for guards spotting the player/updating each guards position & behaviour state
+	LineDrawFunction = &GetSightBlocked;
+	for (Guard* guardPtr : currentRoomPtr->m_guards)
+	{
+		if (guardPtr != nullptr)
+		{
+			if (guardPtr->GetState() != 4)
+			{
+
+				std::cout << guardPtr->GetState();
+
+				if (PlotLine(guardPtr->GetPosition(), player->GetPosition())
+					&& GetCurrentRoom()->GetTileIsLit(player->GetPosition()))
+				{
+					//Put into the setSees func;
+
+					lastActionText = "You were spotted! Get out of sight!";
+
+					guardPtr->SetSeesPlayer(true);
+					guardPtr->GeneratePath(player->GetPosition());
+					//Add logic to spot player
+				}
+
+				else guardPtr->SetSeesPlayer(false);
+
+
+				guardPtr->UpdateState();
+				//guardPtr->UpdateBehaviour();
+			}
 		}
 	}
 
@@ -353,7 +387,7 @@ void Game::UpdateDisplay()
 
 
 			//Check if the player can see the tile.
-			LineDrawFunction = &GetSightBlocked;
+			//LineDrawFunction = &GetSightBlocked;
 			if (!PlotLine(player->GetPosition(),currentTilePos)) {
 				
 				//printParams += "m   \033[m";
@@ -422,11 +456,6 @@ void Game::UpdateDisplay()
 			for (Guard* guardPtr : currentRoomPtr->m_guards) {
 				if (empty && guardPtr != nullptr) {
 					if (currentTilePos == guardPtr->GetPosition()) {
-						if (PlotLine(guardPtr->GetPosition(), player->GetPosition())
-							&& currentRoomPtr->GetTileIsLit(player->GetPosition()))
-						{ 
-							//Add logic to spot player
-						}
 						printParams += ";38;5;";
 						printParams += String::IntToString(guardPtr->GetColour());
 						printParams += "m  ";
@@ -447,6 +476,7 @@ void Game::UpdateDisplay()
 		printParams = "";
 
 	}
+
 	lastActionText.WriteToConsole();
 }
 
@@ -455,7 +485,7 @@ void Game::UpdateDisplay()
 void Game::SetupRooms()
 {
 	int* tiles00 = new int[16*16]{
-		2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,
+		2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
 		2,1,1,1,1,1,1,1,0,2,0,0,0,0,0,2,
 		2,1,0,0,0,0,0,0,0,2,0,0,0,0,0,2,
 		2,1,0,0,0,0,0,0,0,0,0,0,0,0,0,2,
@@ -476,7 +506,7 @@ void Game::SetupRooms()
 	rooms[0][0].m_tiles = tiles00;
 	rooms[0][0].m_items.push_back(new Coin(Vec2I(4, 1)));
 	rooms[0][0].m_items.push_back(new ManaPotion(Vec2I(1, 3)));
-	rooms[0][0].m_items.push_back(new Door(Vec2I(12, 0)));
+	//rooms[0][0].m_items.push_back(new Door(Vec2I(12, 0))); Having a locked door was misleading to the player and only 1 was present so I got rid of it.
 	rooms[0][0].m_items.push_back(new Door(Vec2I(15, 5), false, Vec2I(1,0), Vec2I(1,5), 1));
 	rooms[0][0].m_items.push_back(new Door(Vec2I(12, 15), false, Vec2I(0,1), Vec2I(12, 1), 2));
 	rooms[0][0].m_guards.push_back(new Guard(Vec2I(12, 5), 2));
@@ -701,5 +731,20 @@ bool Game::GetMovementBlocked(Vec2I a_position, int a_freeTiles) {
 			return true;
 		}
 	}
+	return false;
+}
+
+bool Game::GetGuardMovementBlocked(Guard* a_guardPtr, Vec2I a_position) {
+
+	if (GetCurrentRoom()->GetTileState(a_position) > 0)
+	{
+		return true;
+	}
+
+	//for (Guard* guard : GetCurrentRoom()->m_guards) {
+	//	if (guard->GetPosition() == (a_position) && a_guardPtr != guard) {
+	//		return true;
+	//	}
+	//}
 	return false;
 }

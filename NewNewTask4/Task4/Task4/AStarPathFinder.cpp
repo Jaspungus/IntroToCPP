@@ -16,9 +16,9 @@ bool AStarPathFinder::IsValid(Vec2I a_position)
 	else return false;
 }
 
-bool AStarPathFinder::IsBlocked(Vec2I a_position)
+bool AStarPathFinder::IsBlocked(Guard* guardPtr, Vec2I a_position)
 {
-	return Game::GetInstance()->GetMovementBlocked(a_position);
+	return Game::GetInstance()->GetGuardMovementBlocked(guardPtr, a_position);
 }
 
 bool AStarPathFinder::IsDestination(Vec2I a_position, Vec2I a_goal)
@@ -33,10 +33,10 @@ int AStarPathFinder::CalculateHeuristic(Vec2I a_position, Vec2I a_goal)
 
 
 
-std::stack<std::pair<int, int>> AStarPathFinder::TracePath(std::pair<int, int> a_destination)
+std::stack<std::pair<int, int>> AStarPathFinder::TracePath(Vec2I a_destination)
 {
-	int row = a_destination.first;
-	int col = a_destination.second;
+	int row = a_destination.Y;
+	int col = a_destination.X;
 
 	stack<std::pair<int,int>> path;
 
@@ -55,13 +55,15 @@ std::stack<std::pair<int, int>> AStarPathFinder::TracePath(std::pair<int, int> a
 	return path;
 }
 
-void AStarPathFinder::AStarSearch(int* tiles, Vec2I a_source, Vec2I a_destination)
+void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_destination)
 {
 
 	if (!IsValid(a_source)) { std::cout << "Source invalid." << std::endl; return; }
 	if (!IsValid(a_destination)) { std::cout << "Destination invalid." << std::endl; return; }
-	if (IsBlocked(a_source) || IsBlocked(a_destination)) { std::cout << "Source or destination blocked." << std::endl; return; }
+	if (IsBlocked(guardPtr, a_source) || IsBlocked(guardPtr, a_destination)) { std::cout << "Source or destination blocked." << std::endl; return; }
 	if (IsDestination(a_source, a_destination)) { std::cout << "Already at Destination" << std::endl; return; }
+
+	int* tiles = Game::GetInstance()->GetCurrentRoom()->m_tiles;
 
 	//Closed list of all the tiles to ignore. This will start as empty. It is a 2D array the size of the map.
 	bool closedList[MAPX][MAPY];
@@ -133,7 +135,7 @@ void AStarPathFinder::AStarSearch(int* tiles, Vec2I a_source, Vec2I a_destinatio
 				return;
 			}
 
-			else if (!closedList[i - 1][j] && !IsBlocked(Vec2I(i - 1, j))) {
+			else if (!closedList[i - 1][j] && !IsBlocked(guardPtr, Vec2I(i - 1, j))) {
 				gNew = cellDetails[i][j].g + 1;
 				hNew = CalculateHeuristic(Vec2I(i - 1, j), a_destination);
 				fNew = gNew + hNew;
@@ -165,7 +167,7 @@ void AStarPathFinder::AStarSearch(int* tiles, Vec2I a_source, Vec2I a_destinatio
 				return;
 			}
 
-			else if (!closedList[i - 1][j] && !IsBlocked(Vec2I(i + 1, j))) {
+			else if (!closedList[i - 1][j] && !IsBlocked(guardPtr, Vec2I(i + 1, j))) {
 				gNew = cellDetails[i][j].g + 1;
 				hNew = CalculateHeuristic(Vec2I(i - 1, j), a_destination);
 				fNew = gNew + hNew;
@@ -197,7 +199,7 @@ void AStarPathFinder::AStarSearch(int* tiles, Vec2I a_source, Vec2I a_destinatio
 				return;
 			}
 
-			else if (!closedList[i][j + 1] && !IsBlocked(Vec2I(i, j + 1))) {
+			else if (!closedList[i][j + 1] && !IsBlocked(guardPtr, Vec2I(i, j + 1))) {
 				gNew = cellDetails[i][j + 1].g + 1;
 				hNew = CalculateHeuristic(Vec2I(i, j + 1), a_destination);
 				fNew = gNew + hNew;
@@ -223,13 +225,14 @@ void AStarPathFinder::AStarSearch(int* tiles, Vec2I a_source, Vec2I a_destinatio
 			if (IsDestination(Vec2I(i, j - 1), a_destination))
 			{
 				cellDetails[i][j - 1].parentPos = Vec2I(i, j);
-				std::cout << "found it" << std::endl;
+				//std::cout << "found it" << std::endl; This works now.
+				//Trace path????
 				//Trace path????
 				foundDest = true;
 				return;
 			}
 
-			else if (!closedList[i][j - 1] && !IsBlocked(Vec2I(i, j - 1))) {
+			else if (!closedList[i][j - 1] && !IsBlocked(guardPtr, Vec2I(i, j - 1))) {
 				gNew = cellDetails[i][j - 1].g + 1;
 				hNew = CalculateHeuristic(Vec2I(i, j - 1), a_destination);
 				fNew = gNew + hNew;

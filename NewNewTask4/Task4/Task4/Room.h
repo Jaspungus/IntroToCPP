@@ -18,14 +18,11 @@ public:
 
 	//Stored as an array of pointers in order to check whether the object
 	//Is initialised first when updating display and other things.
-	size_t itemCount;
 	list<Item*> m_items;
 	//Item** m_items = nullptr;
 
-	size_t guardCount = 2;
 	list<Guard*> m_guards;// = new Guard * [guardCount] {nullptr};
 
-	//
 	int* m_tiles = nullptr;
 	bool m_litStates[16][16] = { false };
 

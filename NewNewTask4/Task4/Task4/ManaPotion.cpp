@@ -16,7 +16,7 @@ ManaPotion::~ManaPotion() {
 }
 
 void ManaPotion::Description() const {
-
+	Item::Description();
 }
 
 void ManaPotion::Use() {

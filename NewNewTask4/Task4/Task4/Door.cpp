@@ -38,7 +38,7 @@ Door::~Door() {
 }
 
 void Door::Description() const {
-
+	Item::Description();
 }
 
 void Door::Use() {
@@ -53,6 +53,7 @@ void Door::Use() {
 		playerPtr->SetPosition(playerSpawn);
 		playerPtr->SetDirection(exitDirection);
 		currentGame->lastActionText = "You quietly open the door and enter the next room.";
+		currentGame->GetCurrentRoom()->Description();
 	}
 }
 

@@ -1,5 +1,5 @@
 #include "Item.h"
-
+#include "Game.h"
 
 Item::Item() {
 
@@ -49,6 +49,8 @@ void Item::SetPosition(const Vec2I a_position)
 
 void Item::Description() const
 {
+    Game* currentGame = Game::GetInstance();
+    currentGame->lastActionText += m_name;
 }
 
 void Item::Use()

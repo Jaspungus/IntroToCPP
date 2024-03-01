@@ -12,7 +12,10 @@ class Game
 private:
 	const int MAPHEIGHT = 2;
 	const int MAPWIDTH = 2;
-	Room rooms[2][2];
+	Room rooms[2][2] = 
+	{ {Room("\nYou're in the back of the building now. There's nothing around but toilets and offices. Miserable."), Room("\nThe kitchen. Where the magic happens, if reheating week old jerky and assembling it into a heap with stale bread and molting lettuce is considered magic.")},
+	  {Room("\nThe front room. It somehow looks less miserable in the dark. The shadows concealing peeling wallpaper, stained carpets, questionably clean tables and a cocktail bar that only ever serves beer."), Room("\nThe second dining hall. Like the first but without the half hearted attempts to impress new diners. Here lies the second side of the bar, this one without the rows of bottles that nobody orders.")}
+	};
 	int currentRoomX = 0;
 	int currentRoomY = 0;
 
@@ -54,6 +57,7 @@ public:
 	Player* GetPlayer();
 	bool GetMovementBlocked(Vec2I a_position);
 	bool GetMovementBlocked(Vec2I a_position, int a_freeTiles);
+	bool GetGuardMovementBlocked(Guard* a_guardPtr, Vec2I a_position);
 
 private:
 	void SetupRooms();

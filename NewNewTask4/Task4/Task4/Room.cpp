@@ -1,4 +1,5 @@
 #include "Room.h"
+#include "Game.h"
 
 Room::Room() {
 	m_description = new String("An empty Room");
@@ -37,7 +38,11 @@ Room::~Room()
 
 void Room::Description() const
 {
-	m_description->WriteToConsole();
+	Game::GetInstance()->lastActionText += *m_description;
+	for (Item* itemPtr : m_items) {
+		Game::GetInstance()->lastActionText += "\n";
+		itemPtr->Description();
+	}
 }
 
 
@@ -65,7 +70,7 @@ Item* Room::GetItem(Vec2I a_position)
 
 Item* Room::GetItem(size_t index)
 {
-	if (index > 0 && index < itemCount)
+	if (index > 0 && index < m_items.size())
 	{
 		size_t i = 0;
 		for (Item* item : m_items) {
