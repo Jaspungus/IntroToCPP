@@ -5,6 +5,12 @@
 #include "Coin.h"
 #include "ManaPotion.h"
 #include "Door.h"
+#include "ExitDoor.h"
+#include "Toilet.h"
+#include "Ham.h"
+#include "Diamond.h"
+#include "SightPotion.h"
+//Yeah yeah i should have made one file that had all of the items in it.
 
 class Game
 {
@@ -22,12 +28,16 @@ private:
 	Player* player;
 
 	bool isPlaying = false;
-	bool useTurn = false;
+	bool failed = false;
+
 	int turnCount = 0;
 	String HUD;
 
 public:
 	String lastActionText;
+	bool useTurn = false;
+	bool allSeeing = false;
+	bool stopTime = false;
 
 public:
 	Game();
@@ -58,6 +68,10 @@ public:
 	bool GetMovementBlocked(Vec2I a_position);
 	bool GetMovementBlocked(Vec2I a_position, int a_freeTiles);
 	bool GetGuardMovementBlocked(Guard* a_guardPtr, Vec2I a_position);
+
+	void EmitNoise(Vec2I a_position);
+
+	void GameOver(bool failed);
 
 private:
 	void SetupRooms();

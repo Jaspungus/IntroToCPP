@@ -38,7 +38,8 @@ Door::~Door() {
 }
 
 void Door::Description() const {
-	Item::Description();
+	Game* currentGame = Game::GetInstance();
+	currentGame->lastActionText += "A simple door. Not much to it.";
 }
 
 void Door::Use() {

@@ -16,6 +16,7 @@ public:
 	const float Distance(Vec2I dest) const;
 	const float DistanceSquared(Vec2I dest) const;
 	const Vec2I Perpindicular() const;
+	const int DotProduct(const Vec2I& other) const;
 
 public:
 	static Vec2I Zero();

@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Vec2.h"
+#include "Game.h"
 
 Player::Player() {
 	m_position = Vec2I(0, 0);
@@ -14,25 +15,71 @@ Player::Player(Vec2I a_pos) {
 
 
 Player::~Player() {
-
+	for (Item* item : inventory) {
+		delete item;
+	}
 }
 
 
 bool Player::FindSpell(String spell) {
 	//Binary Search.
+	int left = 0;
+	int right = spells.size() -1;
+	while (left <= right) {
+		int mid = (left + right) / 2;
+		if (spells[mid].ToLower() == spell.ToLower()) return true;
+		else if (spells[mid].ToLower() < spell.ToLower()) left = mid + 1;
+		else right = mid - 1;
+	}
+
+
 	return false;
 }
 
-void Player::ListSpells() {
+String Player::ListSpells() {
+	String output = "Spells: ";
+	for (String spell : spells) {
+		output += "\n";
+		output += spell;
+	}
 
+	return output;
+		
 }
 
-void Player::UseItem(String a_item)
+//Oh goodnesss I regret making it dumb.
+String Player::ExplainSpell(String spell) {
+	String output;
+
+	if (spell.ToLower() == "sense") {
+		output = "Detect all nearby items. \"A favourite of the Arcane University's archeology department.\"";
+	}
+	else if (spell.ToLower() == "shock") {
+		output = "Pacify a target up to 3 tiles in front of oneself. \"An apprentice level lightning spell capable of knocking just about anyone unconscious. Excellent for reheating leftovers\"";
+	}
+	else if (spell.ToLower() == "teleport") {
+		output = "Teleport up to 5 tiles in front of oneself. \"An exceedly effective spell for quick transport. DO NOT USE ON BREAD.\"";
+	}
+	else if (spell.ToLower() == "turn pink") {
+		output = "Turns the caster pink. \"Functions as expected. Embarrassingly rreversible.\"";
+	}
+	else if (spell.ToLower() == "yellow") {
+		output = "\"This should be obvious.\" it says.";
+	}
+	return output;
+}
+
+bool Player::UseItem(int startIndex, String a_item)
 {
 	for (Item* itemPtr : inventory)
 	{
-		if (a_item == itemPtr->GetName()) itemPtr->Use();
+		if (a_item.Find(startIndex, itemPtr->GetName()) != -1) {
+	
+			itemPtr->Use();
+			return true;
+		}
 	}
+	return false;
 }
 
 String Player::ListItems()
@@ -108,19 +155,19 @@ void Player::SetDirection(int a_direction) {
 
 	switch (m_direction) {
 		case 0: {
-			m_icon = '^';
+			m_icon = String::IntToASCII(30)[0];//'^';
 			break;
 		}
 		case 1: {
-			m_icon = '>';
+			m_icon = String::IntToASCII(16)[0];//'>';
 			break;
 		}
 		case 2: {
-			m_icon = 'v';
+			m_icon = String::IntToASCII(31)[0]; //'v';
 			break;
 		}
 		case 3: {
-			m_icon = '<';
+			m_icon = String::IntToASCII(17)[0];// '<';
 			break;
 		}
 	}

@@ -11,7 +11,7 @@ Item::~Item() {
 
 const String Item::GetName() const
 {
-    return String();
+    return m_name;
 }
 
 const int Item::GetColour() const

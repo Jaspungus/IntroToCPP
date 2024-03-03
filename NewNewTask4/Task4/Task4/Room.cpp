@@ -34,14 +34,27 @@ Room::~Room()
 	//delete[] m_items;
 	//delete[] m_guards;
 	delete m_description;
+
+	for (Item* item : m_items) {
+		delete item;
+	}
+	for (Guard* guard : m_guards) {
+		delete guard;
+	}
 }
 
 void Room::Description() const
 {
 	Game::GetInstance()->lastActionText += *m_description;
+	DescribeItems();
+}
+
+void Room::DescribeItems() const {
+	Game::GetInstance()->lastActionText += "\nYou sense the following: ";
+
 	for (Item* itemPtr : m_items) {
 		Game::GetInstance()->lastActionText += "\n";
-		itemPtr->Description();
+		Game::GetInstance()->lastActionText += itemPtr->GetName(); //Change this back to use Description() if it's a problem. I don't think it should be.
 	}
 }
 
@@ -57,11 +70,11 @@ void Room::SetTileIsLit(Vec2I a_position, bool a_isLit) {
 
 const int Room::GetTileState(Vec2I a_position) const
 {
-	if (a_position.Y < 0 || a_position.Y >= ROOMHEIGHT) { std::cout << "Y coord out of bounds"; return -1; }
-	if (a_position.X < 0) { std::cout << "X coord out of bounds <"; return -1; }
-	else if (a_position.X >= ROOMWIDTH) { std::cout << "X coord out of bounds >"; return -1; }
+	if (a_position.Y < 0 || a_position.Y >= ROOMHEIGHT) { std::cout << "Y coord out of bounds"; return 2; }
+	if (a_position.X < 0) { std::cout << "X coord out of bounds <"; return 2; }
+	else if (a_position.X >= ROOMWIDTH) { std::cout << "X coord out of bounds >"; return 2; }
 
-	if (a_position.Y * ROOMWIDTH + a_position.X >= 256) { std::cout << a_position.Y * ROOMWIDTH + a_position.X << std::endl; return -1;}
+	if (a_position.Y * ROOMWIDTH + a_position.X >= 256) { std::cout << a_position.Y * ROOMWIDTH + a_position.X << std::endl; return 2;}
 
 	return m_tiles[a_position.Y * ROOMWIDTH + a_position.X];
 }

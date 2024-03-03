@@ -32,6 +32,7 @@ public:
 	//Room(const char* a_description, Item** a_item);
 	~Room();
 	void Description() const;
+	void DescribeItems() const;
 
 	const int GetTileIsLit(Vec2I a_position) const;
 	void SetTileIsLit(Vec2I a_position, bool a_isLit);

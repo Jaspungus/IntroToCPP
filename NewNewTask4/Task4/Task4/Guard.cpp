@@ -1,4 +1,6 @@
 #include "Guard.h"
+#include "Game.h"
+
 
 Guard::Guard() {
 	m_position = Vec2I(0, 0);
@@ -24,23 +26,15 @@ const Vec2I Guard::GetPosition() const {
 }
 
 void Guard::SetPosition(Vec2I a_position) {
-	SetPosition(a_position.X, a_position.Y);
+	FaceDirection(a_position - m_position);
+
+	m_position = a_position;
+	if (m_position.X <= 0) m_position.X = 0;
+	if (m_position.Y <= 0) m_position.Y = 0;
 }
 
 void Guard::SetPosition(int x, int y) {
-
-	int newDir = -1;
-	if (y < m_position.Y) newDir = 0;
-	if (y > m_position.Y) newDir = 2;
-	if (x < m_position.X) newDir = 3;
-	if (x > m_position.X) newDir = 1;
-
-	SetDirection(newDir);
-
-	m_position.X = x;
-	m_position.Y = y;
-	if (m_position.X <= 0) m_position.X = 0;
-	if (m_position.Y <= 0) m_position.Y = 0;
+	SetPosition(Vec2I(x, y));
 }
 
 const int Guard::GetDirection() const {
@@ -76,22 +70,33 @@ void Guard::SetDirection(int a_direction) {
 
 	switch (m_direction) {
 	case 0: {
-		m_icon = '^';
+		m_icon = String::IntToASCII(30)[0];//'^';
 		break;
 	}
 	case 1: {
-		m_icon = '>';
+		m_icon = String::IntToASCII(16)[0];//'>';
 		break;
 	}
 	case 2: {
-		m_icon = 'v';
+		m_icon = String::IntToASCII(31)[0]; //'v';
 		break;
 	}
 	case 3: {
-		m_icon = '<';
+		m_icon = String::IntToASCII(17)[0];// '<';
 		break;
 	}
 	}
+}
+
+void Guard::FaceDirection(Vec2I a_direction)
+{
+	int newDir = -1;
+	if (a_direction.Y < 0) newDir = 0;
+	if (a_direction.Y > 0) newDir = 2;
+	if (a_direction.X < 0) newDir = 3;
+	if (a_direction.X > 0) newDir = 1;
+
+	SetDirection(newDir);
 }
 
 const char* Guard::GetIcon() const {
@@ -124,11 +129,20 @@ void Guard::UpdateState() {
 	//Change colours and stuff.
 	switch (m_state) {
 	case Calm:
-		if (m_seesPlayer) { m_state = Alert; break; }
+		if (m_seesPlayer) { SetState(Alert); break; }
+		
+		if (m_targetPosition == -Vec2I::One() && m_patrolPointCount > 1) {
+			m_patrolCurrentIndex = 1;
+			m_targetPosition = m_patrolRoute[m_patrolCurrentIndex];
+			GeneratePath(m_targetPosition);
+		}
 
 		if (m_position == m_targetPosition) {
 			//Set next node as path
-
+			m_patrolCurrentIndex++;
+			if (m_patrolCurrentIndex >= m_patrolPointCount) m_patrolCurrentIndex = 0;
+			m_targetPosition = m_patrolRoute[m_patrolCurrentIndex];
+			GeneratePath(m_targetPosition);
 		}
 		else {
 			if (!path.empty()) {
@@ -136,37 +150,107 @@ void Guard::UpdateState() {
 				path.pop();
 			}
 		}
+		
+		break;
+	case Investigating:
+		if (m_seesPlayer) { SetState(Alert); break; }
+
+		//Move along path (should be set to a location)
+		if (path.size() == 1) {
+			
+			FaceDirection(Vec2I(path.top().first, path.top().second) - m_position);
+			path.pop();
+			
+		}
+
+		else if (!path.empty()) {
+			SetPosition(Vec2I(path.top().first, path.top().second));
+			path.pop();
+		}
+
+		else {
+			//Go to next patrol node. Return to regular behavior.
+			SetState(Calm);
+			if (m_patrolPointCount > 0) {
+				m_targetPosition = m_patrolRoute[m_patrolCurrentIndex];
+				GeneratePath(m_targetPosition);
+			}
+		}
+
 
 		break;
-	//case Investigating:
-	//	if (m_position == m_targetPosition) {
-	//		if (m_hasSeenPlayer) m_state = Paranoid;
-	//		else m_state = Calm;
-	//	}
+	case Paranoid:
+		if (m_seesPlayer) { SetState(Alert); break; }
+		//Follow path. Turn round every x turns
+		//Set next node as path, keep a turn counter.
 
-	//	//Move along path (should be set to a location)
-	//	if (!path.empty()) {
-	//		SetPosition(Vec2I(path.top().second, path.top().first));
-	//		path.pop();
-	//	}
 
-	//	if (m_seesPlayer) { m_state = Alert; break; }
-	//	break;
-	//case Paranoid:
-	//	if (m_seesPlayer) { m_state = Alert; break; }
+		if (m_position == m_targetPosition) {
+			//Set next node as path
+			if (m_patrolCurrentIndex >= m_patrolPointCount) m_patrolCurrentIndex = 0;
+			m_targetPosition = m_patrolRoute[m_patrolCurrentIndex];
+			GeneratePath(m_targetPosition);
+		}
+		//This is where I would keep special behaviour for turning around randomly.
+		//If I had some.
+		else {
+			if (!path.empty()) {
+				SetPosition(Vec2I(path.top().first, path.top().second));
+				path.pop();
+			}
+		}
+		break;
+	case Alert:
+		if (!m_seesPlayer) { SetState(Investigating); UpdateState(); break; }
 
-	//	//Follow path. Turn round every x turns
-	//	//Set next node as path, keep a turn counter.
+		if (path.size() == 1) {
 
-	//	break;
-	//case Alert:
-	//	if (!m_seesPlayer) m_state = Paranoid;
-	//	//else make player lose
-	//	break;
+			FaceDirection(Vec2I(path.top().first, path.top().second) - m_position);
+			Game::GetInstance()->GameOver(true);
+			std::cout << "PLAYER CAUGHT OOOOOOOOYEAAAAH BAAAYBE";
+			path.pop();
+		}
+
+		if (!path.empty()) {
+			SetPosition(Vec2I(path.top().first, path.top().second));
+			path.pop();
+		}
+
+
+		break;
 	case Unconscious:
 		break;
 	}
-	std::cout << m_seesPlayer;
+}
+
+void Guard::SetState(AIState state) 
+{
+	switch (state) {
+	case Calm:
+	{
+		m_colour = 93;
+		break;
+	}
+	case Investigating:
+	{
+		m_colour = 226;
+		break;
+		}
+	case Paranoid: {
+		m_colour = 202;
+		break;
+		}
+
+	case Alert: {
+		m_colour = 196;
+		break;
+		}
+	case Unconscious: {
+		m_colour = 88;
+		break;
+		}
+	}
+	m_state = state;
 }
 
 

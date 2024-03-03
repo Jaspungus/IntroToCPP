@@ -141,32 +141,40 @@
   <ItemGroup>
     <ClCompile Include="AStarPathFinder.cpp" />
     <ClCompile Include="Coin.cpp" />
+    <ClCompile Include="Diamond.cpp" />
     <ClCompile Include="Door.cpp" />
     <ClCompile Include="ExitDoor.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Guard.cpp" />
+    <ClCompile Include="Ham.cpp" />
     <ClCompile Include="Item.cpp" />
     <ClCompile Include="ManaPotion.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Room.cpp" />
+    <ClCompile Include="SightPotion.cpp" />
     <ClCompile Include="String.cpp" />
     <ClCompile Include="Task4.cpp" />
     <ClCompile Include="Tile.cpp" />
+    <ClCompile Include="Toilet.cpp" />
     <ClCompile Include="Vec2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AStarPathFinder.h" />
     <ClInclude Include="Coin.h" />
+    <ClInclude Include="Diamond.h" />
     <ClInclude Include="Door.h" />
     <ClInclude Include="ExitDoor.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Guard.h" />
+    <ClInclude Include="Ham.h" />
     <ClInclude Include="Item.h" />
     <ClInclude Include="ManaPotion.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Room.h" />
+    <ClInclude Include="SightPotion.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="Tile.h" />
+    <ClInclude Include="Toilet.h" />
     <ClInclude Include="Vec2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

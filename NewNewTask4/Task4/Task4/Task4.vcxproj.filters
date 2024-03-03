@@ -63,6 +63,18 @@
     <ClCompile Include="AStarPathFinder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Toilet.cpp">
+      <Filter>Source Files\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="Ham.cpp">
+      <Filter>Source Files\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="Diamond.cpp">
+      <Filter>Source Files\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="SightPotion.cpp">
+      <Filter>Source Files\Items</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Room.h">
@@ -98,11 +110,23 @@
     <ClInclude Include="Door.h">
       <Filter>Header Files\Items</Filter>
     </ClInclude>
-    <ClInclude Include="ExitDoor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="AStarPathFinder.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExitDoor.h">
+      <Filter>Header Files\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="Toilet.h">
+      <Filter>Header Files\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="Ham.h">
+      <Filter>Header Files\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="Diamond.h">
+      <Filter>Header Files\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="SightPotion.h">
+      <Filter>Header Files\Items</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -52,8 +52,9 @@ void AStarPathFinder::TracePath(Guard* guardPtr, Vec2I a_destination)
 	}
 
 
-
-	guardPtr->path.push(make_pair(row, col));
+	//This one was adding the starting position to the list. Which I kind of don't want. Otherwise guards become paralysed when the player remains in vision.
+	//This is fine for just 1 turn. I want the player to realise they've been spotted before the guard moves. But staying completely still is dumb.
+	//guardPtr->path.push(make_pair(row, col));
 }
 
 void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_destination)
@@ -128,7 +129,7 @@ void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_desti
 			if (IsDestination(Vec2I(i - 1, j), a_destination))
 			{
 				cellDetails[i - 1][j].parentPos = Vec2I(i, j);
-				std::cout << "found it" << std::endl;
+				//std::cout << "found it" << std::endl;
 				//Trace path????
 				foundDest = true;
 				return;
@@ -162,7 +163,7 @@ void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_desti
 			if (IsDestination(Vec2I(i + 1, j), a_destination))
 			{
 				cellDetails[i + 1][j].parentPos = Vec2I(i, j);
-				std::cout << "found it" << std::endl;
+				//std::cout << "found it" << std::endl;
 				//Trace path????
 				foundDest = true;
 				return;
@@ -191,12 +192,13 @@ void AStarPathFinder::AStarSearch(Guard* guardPtr, Vec2I a_source, Vec2I a_desti
 			}
 		}
 
+		//I had to do some bugfixing here (was missetting parentpos) And I think this might actually be south. Which would make sense because my coords are not in 2D array form.
 		//East
 		if (IsValid(Vec2I(i, j + 1))) {
 			if (IsDestination(Vec2I(i, j + 1), a_destination))
 			{
-				cellDetails[i][j + 1].parentPos = Vec2I(i, j + 1);
-				std::cout << "found it" << std::endl;
+				cellDetails[i][j + 1].parentPos = Vec2I(i, j);
+				//std::cout << "found it" << std::endl;
 				//Trace path????
 				foundDest = true;
 				return;

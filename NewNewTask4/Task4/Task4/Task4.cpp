@@ -8,8 +8,6 @@
 
 int main()
 {
-    std::cout << "Hello World!\n";
-   
     Game* currentGame = Game::GetInstance();
     currentGame->Run();
 }

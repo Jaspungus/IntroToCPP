@@ -61,6 +61,11 @@ const Vec2I Vec2I::Perpindicular() const {
 	return Vec2I(Y, X);
 }
 
+const int Vec2I::DotProduct(const Vec2I& other) const {
+	return (X * other.X) + (Y * other.Y);
+}
+
+
 bool Vec2I::operator==(const Vec2I& other) const
 {
 	return (X == other.X && Y == other.Y);

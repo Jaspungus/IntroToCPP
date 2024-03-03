@@ -9,11 +9,11 @@ using namespace std;
 class Player
 {
 private:
-	list<String> spells = { "Illusion", "Shock", "Teleport", "Turn Pink", "Yellow"};
+	vector<String> spells = { "Sense", "Shock", "Teleport", "Turn Pink", "Yellow" };
 
 	Vec2I m_position;
 	int m_direction = 0;
-	char m_icon = '^';
+	char m_icon = String::IntToASCII(30)[0];// '^';
 	int m_colour = 40;
 	//This is the range the player can see at.
 	int m_sightRange = 8;
@@ -33,9 +33,10 @@ public:
 
 public:
 	bool FindSpell(String spell);
-	void ListSpells();
+	String ListSpells();
+	String ExplainSpell(String spell);
 
-	void UseItem(String a_item);
+	bool UseItem(int startIndex, String a_item);
 	String ListItems();
 
 	void Move(const int x, const int y);

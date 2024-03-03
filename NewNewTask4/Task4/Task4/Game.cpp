@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Vec2.h"
 #include <stdlib.h>
+#include <ctime>
 
 bool GetSightBlocked(Vec2I a_position);
 bool GetLightBlocked(Vec2I a_position);
@@ -18,39 +19,60 @@ Game::~Game() {
 Game Game::gameInstance;
 
 void Game::Run() {
-	std::cout << "Enter Player Name" << std::endl;
+	struct tm newTime;
+	time_t startTime = time(NULL);
+	localtime_s(&newTime, &startTime);
 
 	String command;
 	String commandBuffer;
-	//command.ReadFromConsole();
-
-	//for (int i = 0; i < 2; i++) {
-	//	for (int j = 0; j < 2; j++)
-	//	{
-	//		rooms[i][j].Description();
-	//	
-
-	//	}
-	//}
 
 
-	//for (int i = 0; i < 16; i++) {
-	//	for (int j = 0; j < 16; j++)
-	//	{
-	//		std::cout << String::IntToASCII(i * 16 + j).CharacterAt(0);
-
-
-	//	}
-	//	std::cout << std::endl;
-	//}
+	GetCurrentRoom()->Description();
+	
 
 	isPlaying = true;
 
 	while (isPlaying) {
 
 		//If the last action was successful, use up a turn and update enemies.
-		if (useTurn) {
+		if (useTurn && !stopTime) {
 
+			//Code for guards spotting the player/updating each guards position & behaviour state
+			//It is important for this call to happen first so the guard's position is updated and then the light cone is drawn.
+			//This (as of 12:10 2/03) has issues surrounding it as light data is cleared and redrawn every frame.
+			//Should be good now, and guards should only update every time the player uses a turn.
+
+			LineDrawFunction = &GetSightBlocked;
+			for (Guard* guardPtr : GetCurrentRoom()->m_guards)
+			{
+				if (guardPtr != nullptr)
+				{
+					if (guardPtr->GetState() != 4)
+					{
+
+						//Guards will spot the player IF:
+						//There is nothing blocking the line of sight
+						//The player is on a tile that is lit
+						//The player is within 180 degrees of vision.
+						if (GetCurrentRoom()->GetTileIsLit(player->GetPosition())
+						//	&& guardPtr->GetDirectionVector().DotProduct(player->GetPosition() - guardPtr->GetPosition()) > 0
+							&& PlotLine(guardPtr->GetPosition(), player->GetPosition())	)
+						{
+
+							guardPtr->SetSeesPlayer(true);
+							guardPtr->GeneratePath(player->GetPosition()); //For some reason, it fails to generate a path if the player is directly below the guard. Up is fine.
+							lastActionText = "A guard can see you!";
+
+							//Player loses
+						}
+
+						else { guardPtr->SetSeesPlayer(false); }
+
+						guardPtr->UpdateState();
+					}
+				}
+			}
+			
 			useTurn = false;
 			turnCount++;
 		}
@@ -74,7 +96,10 @@ void Game::Run() {
 			//Diagonals work and only use one turn.
 		
 			//If the player cannot move that way, state so. Don't use turn.
-			if (pathBlocked)
+			if (direction == Vec2I::Zero()) {
+				lastActionText = "Move where? North? South? East? West? Be more specific.";
+			}
+			else if (pathBlocked)
 			{
 				player->FaceDirection(direction);
 				lastActionText = "You cannot go that way.";
@@ -93,22 +118,37 @@ void Game::Run() {
 		else if (command.Find("take") != -1 || command.Find("grab") != -1 || command.Find("pick up") != -1) {
 			//If a direction is added, use that and turn player. Otherwise use player direction.
 			Vec2I direction = GetDirectionFromInput(command);
-			if (direction == Vec2I::Zero()) direction = player->GetDirectionVector();
+			bool itemUsed = false;
+			if (direction == Vec2I::Zero()) {
+
+				Item* itemPtr = GetCurrentRoom()->GetItem(player->GetPosition());
+				if (itemPtr != nullptr) {
+					//If the item is imovable interact with it, otherwise pick it up first.
+					if (itemPtr->Take()) {
+						useTurn = true;
+					}
+					itemUsed = true;
+				}
+					
+				
+				direction = player->GetDirectionVector();
+			}
 			else player->FaceDirection(direction);
 
-			//Check if an item is present.
-			Item* itemPtr = GetCurrentRoom()->GetItem(player->GetPosition() + direction);
-			if (itemPtr != nullptr) {
-
-				//Repeated once. Could make function.
-				//Adds value of item. Removes it from the playspace and adds to inventory.
-
-				
-				if (itemPtr->Take()) useTurn = true;
+			if (!itemUsed) {
+				//Check if an item is present.
+				Item* itemPtr = GetCurrentRoom()->GetItem(player->GetPosition() + direction);
+				if (itemPtr != nullptr) {
+					
+					if (itemPtr->Take()) {
+						
+						useTurn = true;
+					}
+					itemUsed = true;
+				}
 			}
-
 			//If there is nothing present, state so. Don't use turn.
-			else 
+			if (!itemUsed)
 			{
 				lastActionText = "Nothing to pick up.";
 
@@ -117,76 +157,128 @@ void Game::Run() {
 
 		//Using Item/Object in environment. Only works on objects within 1 tile.
 		//If no direction is entered it will use the direction the player is facing.
-		else if (command.Find("use") != -1 || command.Find("interact") != -1) {
-			//If a direction is added, use that and turn player. Otherwise use player direction.
-			Vec2I direction = GetDirectionFromInput(command);
-			if (direction == Vec2I::Zero()) direction = player->GetDirectionVector();
-			else player->FaceDirection(direction);
+		else if (int useIndex = command.Find("use") != -1 || command.Find("interact") != -1) {
 
-			//If there is an item present at the position 1 in that direction
-			Item* itemPtr = rooms[currentRoomY][currentRoomX].GetItem(player->GetPosition() + direction);
-			if (itemPtr != nullptr) {
-				//If the item is imovable interact with it, otherwise pick it up first.
-				if (itemPtr->GetStationary()) {
-					itemPtr->Use();
+			
+				//If a direction is added, use that and turn player. Otherwise use player direction.
+				Vec2I direction = GetDirectionFromInput(command);
+				bool itemUsed = false;
+				if (direction == Vec2I::Zero()) {
+
+					if (useIndex != -1) { itemUsed = player->UseItem(useIndex + 3, command); }
+					if (!itemUsed) {
+						Item* itemPtr = GetCurrentRoom()->GetItem(player->GetPosition());
+						if (itemPtr != nullptr) {
+							//If the item is imovable interact with it, otherwise pick it up first.
+							if (itemPtr->GetStationary()) {
+								itemPtr->Use();
+							}
+							else {
+								itemPtr->Take();
+							}
+							itemUsed = true;
+							useTurn = true;
+						}
+					}
+					direction = player->GetDirectionVector();
+
+
 				}
-				else {
-				/*	itemPtr->Take();
-					player->SetCoinCount(player->GetCoinCount() + itemPtr->GetValue());
-					rooms[currentRoomY][currentRoomX].m_items.remove(itemPtr);
-					player->inventory.push_back(itemPtr);*/
-					lastActionText = itemPtr->m_name;
+				else player->FaceDirection(direction);
+
+				if (!itemUsed) {
+					//If there is an item present at the position 1 in that direction
+					Item* itemPtr = GetCurrentRoom()->GetItem(player->GetPosition() + direction);
+					if (itemPtr != nullptr) {
+						//If the item is imovable interact with it, otherwise pick it up first.
+						if (itemPtr->GetStationary()) {
+							itemPtr->Use();
+						}
+						else {
+							itemPtr->Take();
+						}
+						useTurn = true;
+					}
+					//If there is nothing present, state so. Don't use turn.
+					else
+					{
+						lastActionText = "Nothing to interact with.";
+					}
 				}
-				useTurn = true;
-			}
-			//If there is nothing present, state so. Don't use turn.
-			else
-			{
-				lastActionText = "Nothing to interact with.";
-			}
 		}
 
 		//Add compatibility to look at items in range.
 		else if (int lookIndex = command.Find("look") != -1 || command.Find("face") != -1) {
 			
 			bool itemFound = false;
-			if (lookIndex != -1) {
-				for (Item* itemPtr : GetCurrentRoom()->m_items) {
+			//Turns out this was broken literally until now 4:21 3/03 
+			//And absolutely does not work.
+			//It does not add much. And you can inspect stuff directly in front of you which is fine.
+			//:)
+			//if (lookIndex != -1) {
+			//	for (Item* itemPtr : GetCurrentRoom()->m_items) {
+			//		if (itemPtr != nullptr) {
+			//			//If within range, check if the name matches.
+			//			if (player->GetPosition().DistanceSquared(itemPtr->GetPosition()) < pow(player->GetSight(), 2))
+			//			{
+			//				if (command.Substring(lookIndex + 4, command.Length()).Find(itemPtr->GetName()))
+			//				{
+			//					itemPtr->Description();
+			//					lastActionText += itemPtr->GetName();
+			//					itemFound = true;
+			//					break;
+			//				}
+			//			}
+			//		}
+			//	}
+			//}
+
+			Vec2I direction = GetDirectionFromInput(command);
+			if (!itemFound) {
+
+				if (direction == Vec2I::Zero()) {
+					Item* itemPtr = GetCurrentRoom()->GetItem(player->GetPosition());
 					if (itemPtr != nullptr) {
-						//If within range, check if the name matches.
-						if (player->GetPosition().DistanceSquared(itemPtr->GetPosition()) < pow(player->GetSight(), 2))
-						{
-							if (command.Substring(lookIndex + 4, command.Length()).Find(itemPtr->GetName()))
-							{
-								itemPtr->Description();
-								itemFound = true;
-								break;
-							}
-						}
+						itemPtr->Description();
+						itemFound = true;
 					}
+					direction = player->GetDirectionVector();
 				}
 			}
-
 			if (!itemFound) {
-				Vec2I direction = GetDirectionFromInput(command);
 				Item* itemPtr = GetCurrentRoom()->GetItem(player->GetPosition() + direction);
 				if (itemPtr != nullptr) {
 					itemPtr->Description();
 					player->FaceDirection(direction);
-				}
-
-				else
-				{
-					lastActionText = "There is nothing there.";
-					player->FaceDirection(direction);
+					itemFound = true;
 				}
 			}
+			if (!itemFound)
+			{
+				lastActionText = "There is nothing there.";
+				player->FaceDirection(direction);
+			}
+			
 		}
 
-		//Using items
+		else if (command.Find("spellbook") != -1) {
+			lastActionText = player->ListSpells();
+		}
 
-		else if (int useIndex = command.Find("use") != -1) {
-			player->UseItem(command);
+		else if (int checkIndex = command.Find("spell ") != -1) {
+			String spellString = command.Substring(checkIndex + 5, command.Length());
+			if (player->FindSpell(spellString))
+			{
+				lastActionText = "You know the spell ";
+				lastActionText += spellString;
+				lastActionText += "\n";
+				lastActionText += player->ExplainSpell(spellString);
+			}
+			else 
+			{
+				lastActionText = "You do not know the spell ";
+				lastActionText += spellString;
+			}
 		}
 
 
@@ -202,16 +294,16 @@ void Game::Run() {
 					int i = 0;
 					bool wallHit = false;
 					bool teleport = false;
-					for (i; i <= 3; i++) {
+					for (i; i <= 4; i++) {
 						//Player pos, plus direction * i+1
 						//At i = 0, check 1 tile in front. At i = 5, check the 6th tile.
-						if (GetMovementBlocked(player->GetPosition() + (player->GetDirectionVector() * (i + 1)), 1)) {
+						if (GetSightBlocked(player->GetPosition() + (player->GetDirectionVector() * (i + 1)))) {
 							//Wall hit
 							wallHit = true;
 							teleport = true;
 							break;
 						}
-						if (i == 3) { teleport = true; }
+						if (i == 4) { teleport = true; }
 					}
 
 					
@@ -241,12 +333,52 @@ void Game::Run() {
 			}
 			else if (command.Find(castIndex + 4, "Shock") != -1)
 			{
-				useTurn = true;
+				if (player->GetMana() >= 5)
+				{
+
+					int i = 0;
+					bool succeeded = false;
+					for (i; i < 3; i++) {
+
+						if (!GetSightBlocked(player->GetPosition() + (player->GetDirectionVector() * (i + 1)))) {
+							
+							for (Guard* guardPtr : GetCurrentRoom()->m_guards) {
+								if (guardPtr->GetPosition() == (player->GetPosition() + (player->GetDirectionVector() * (i + 1)))) {
+									//Shock guard
+									guardPtr->SetState(guardPtr->Unconscious);
+									EmitNoise(guardPtr->GetPosition());
+
+									succeeded = true;
+									player->SetMana(player->GetMana() - 5);
+									lastActionText = "You with a crackle of lightning successfully cast \"Shock\". The guard drops to the ground unconscious and only slightly fried.";
+									useTurn = true;
+
+									break;
+								}
+							}
+						}
+						else { break; }
+					}
+
+					if (!succeeded) {
+						lastActionText = "You cast \"Shock\" but there is nothing to shock.";
+					}
+				}
+				else {
+					lastActionText = "You do not have enough mana to cast \"Shock\".";
+				}
 			}
-			else if (command.Find(castIndex + 4, "Illusion") != -1)
+			else if (command.Find(castIndex + 4, "Sense") != -1)
 			{
-				useTurn = true;
+				GetCurrentRoom()->DescribeItems();
 			}
+
+			//else if (command.Find(castIndex + 4, "Illusion") != -1)
+			//{
+			//	//This is the doozy.
+			//  //So much so I've removed it. It was going to spawn a hologram of the player. Which would alert guards. So I figured coins were just better at that.
+			//	useTurn = true;
+			//}
 			else if (command.Find(castIndex + 4, "Turn Pink") != -1)
 			{
  				player->SetColour(177);
@@ -257,6 +389,9 @@ void Game::Run() {
 			{
 				lastActionText = "You cast \"Yellow\"";
 				useTurn = true;
+			}
+			else {
+				lastActionText = "You can only cast spells found in your spellbook. You're not carrying around that brick sized tome for nothing.";
 			}
 		}
 
@@ -271,7 +406,39 @@ void Game::Run() {
 			useTurn = true;
 		}
 
+		else if (command.Find("xray") != -1)
+		{
+			allSeeing = !allSeeing;
+		}
+		else if (command.Find("freeze") != -1)
+		{
+			stopTime = !stopTime;
+		}
 	}
+
+	//End of game stuff.
+	system("CLS");
+
+	if (failed) lastActionText = "\nYou \033[38;5;196mwere caught\033[m with \033[38;5;178m$";
+	else lastActionText = "\nYou \033[38;5;40mexfiltrated successfully\033[m and made it away\033[m with \033[38;5;178m$";
+	lastActionText += String::IntToString(player->GetCoinCount());
+	lastActionText += " worth of stolen loot!\033[m";
+
+	time_t endTime = time(NULL);
+	localtime_s(&newTime, &endTime);
+
+	lastActionText += "\n\nYou took ";
+	lastActionText += String::IntToString(turnCount);
+	lastActionText += " turns over ";
+	lastActionText += String::IntToString((int)difftime(endTime, startTime) / 60);
+	lastActionText += " minutes and ";
+	lastActionText += String::IntToString((int)difftime(endTime, startTime) % 60);
+	lastActionText += " seconds!\n";
+
+	lastActionText.WriteToConsole();
+
+	player->ListItems().WriteToConsole();
+
 }
 
 Vec2I Game::GetDirectionFromInput(const String& command) const {
@@ -306,7 +473,7 @@ void Game::UpdateDisplay()
 	HUD = "Turn Count: ";
 	HUD.Append(String::IntToString(turnCount));
 
-	HUD += "\t\033[38;5;178mo Coins: ";
+	HUD += "\t\033[38;5;178m$ Current Haul: ";
 	HUD.Append(String::IntToString(player->GetCoinCount()));
 	HUD += "\033[m ";
 	
@@ -321,47 +488,40 @@ void Game::UpdateDisplay()
 	HUD.WriteToConsole();
 
 
-	LineDrawFunction = &GetLightBlocked;
-	for (Guard* guardPtr : currentRoomPtr->m_guards) 
-	{
-		if (guardPtr != nullptr) 
-		{
-			guardPtr->UpdateConePoints();
-			for (int i = 0; i < guardPtr->GetViewWidth(); i++) 
-			{
-				PlotLine(guardPtr->GetPosition() + guardPtr->GetDirectionVector(), guardPtr->GetConePoints()[i]);
-			}
+	Vec2I currentTilePos = Vec2I(0, 0);
+	for (currentTilePos.Y = 0; currentTilePos.Y < currentRoomPtr->ROOMHEIGHT; currentTilePos.Y++) {
 
+		for (currentTilePos.X = 0; currentTilePos.X < currentRoomPtr->ROOMWIDTH; currentTilePos.X++)
+		{
+			currentRoomPtr->SetTileIsLit(currentTilePos, false);
 		}
 	}
 
-	//Code for guards spotting the player/updating each guards position & behaviour state
-	LineDrawFunction = &GetSightBlocked;
+	//This loop sets flashlight vision for each guard. The linedraw function GetLightBlocked sets the tile position to lit before it exits.
+	//This means the first obstacle hit is set to lit. It could also just not do that it doesnt really matter.
+	LineDrawFunction = &GetLightBlocked;
 	for (Guard* guardPtr : currentRoomPtr->m_guards)
 	{
 		if (guardPtr != nullptr)
 		{
+
 			if (guardPtr->GetState() != 4)
 			{
-
-				if (PlotLine(guardPtr->GetPosition(), player->GetPosition())
-					&& GetCurrentRoom()->GetTileIsLit(player->GetPosition()))
+				guardPtr->UpdateConePoints();
+				for (int i = 0; i < guardPtr->GetViewWidth(); i++)
 				{
-
-					guardPtr->GeneratePath(player->GetPosition());
-					lastActionText = "You were spotted!";
-
-					//Player loses
+					PlotLine(guardPtr->GetPosition() + guardPtr->GetDirectionVector(), guardPtr->GetConePoints()[i]);
 				}
-
-				guardPtr->UpdateState();
 			}
+
 		}
 	}
 
+	LineDrawFunction = &GetSightBlocked;
+
 	//Printing the map
 	String printParams = "\n\n";
-	Vec2I currentTilePos = Vec2I(0,0);
+	currentTilePos = Vec2I(0,0);
 	for (currentTilePos.Y = 0; currentTilePos.Y < currentRoomPtr->ROOMHEIGHT; currentTilePos.Y++) {
 		//int mod2 = y % 5;
 		//std::cout << currentTilePos.Y << ": ";
@@ -372,7 +532,6 @@ void Game::UpdateDisplay()
 			//std::cout << currentRoomPtr->GetTile(Vec2I(x, y)) << std::endl;
 			int state = currentRoomPtr->GetTileState(currentTilePos);//currentRoomPtr->GetTile(Vec2I(x, y))->GetState();
 			bool lit = currentRoomPtr->GetTileIsLit(currentTilePos);// currentRoomPtr->GetTile(Vec2I(x, y))->GetIsLit();
-			currentRoomPtr->SetTileIsLit(currentTilePos, false);
 			bool empty = true;
 			printParams += "\033[48;5;";
 
@@ -380,11 +539,13 @@ void Game::UpdateDisplay()
 
 			//Check if the player can see the tile.
 			//LineDrawFunction = &GetSightBlocked;
-			if (!PlotLine(player->GetPosition(),currentTilePos)) {
-				
-				//printParams += "m   \033[m";
-				//continue;
-				//state = 2; //This makes it so icons still appear.
+			if (!allSeeing) {
+				if (!PlotLine(player->GetPosition(), currentTilePos) || currentTilePos.Distance(player->GetPosition()) > player->GetSight()) {
+
+					printParams += "m   \033[m";
+					continue;
+					//state = 2; //This makes it so icons still appear.
+				}
 			}
 			//All within, if in sight.
 			//If empty space
@@ -427,6 +588,20 @@ void Game::UpdateDisplay()
 				empty = false;
 			}
 
+			//This also needs to draw their sight cones.
+//LineDrawFunction = &IsTileBlockedSetLit;
+			for (Guard* guardPtr : currentRoomPtr->m_guards) {
+				if (empty && guardPtr != nullptr) {
+					if (currentTilePos == guardPtr->GetPosition()) {
+						printParams += ";38;5;";
+						printParams += String::IntToString(guardPtr->GetColour());
+						printParams += "m  ";
+						printParams[printParams.Length() - 1] = guardPtr->m_icon;
+						empty = false;
+					}
+				}
+			}
+
 
 			for (Item* itemPtr : currentRoomPtr->m_items) {
 				if (empty && itemPtr != nullptr){
@@ -443,26 +618,65 @@ void Game::UpdateDisplay()
 				}
 			}
 
-						//This also needs to draw their sight cones.
-			//LineDrawFunction = &IsTileBlockedSetLit;
-			for (Guard* guardPtr : currentRoomPtr->m_guards) {
-				if (empty && guardPtr != nullptr) {
-					if (currentTilePos == guardPtr->GetPosition()) {
-						printParams += ";38;5;";
-						printParams += String::IntToString(guardPtr->GetColour());
-						printParams += "m  ";
-						printParams[printParams.Length() - 1] = guardPtr->m_icon;
-						empty = false;
-					}
-				}
-			}
-
+		
 			if (empty) {
 				printParams += "m  ";
 			}
 
 			printParams += " \033[m";
 		}
+
+		//Suuuuper dodgy command inputs.
+		switch (currentTilePos.Y) {
+			case 0: {
+				printParams += "\tCommands";
+				break;
+			}
+			case 1: {
+				printParams += "\t\"Move\\Go + Direction\" to move.";
+				break;
+			}
+			case 2: {
+				printParams += "\t\"Look\\Face + Direction\" to face a direction.";
+				break;
+			}
+			case 3: {
+				printParams += "\t\"Take\\Grab\\Pick up + Direction\" to collect items.";
+				break;
+			}
+			case 4: {
+				printParams += "\t\"Use\\Interact + Direction\" to interact with objects.";
+				break;
+			}
+			case 5: {
+				printParams += "\t\"Use + Item\" to use an item from your inventory.";
+				break;
+			}
+			case 6: {
+				printParams += "\t\"Inventory\" to view your inventory.";
+				break;
+			}
+			case 7: {
+				printParams += "\t\"Spellbook\" to view your available spells.";
+				break;
+			}
+			case 8: {
+				printParams += "\t\"Spell + Name\" to check the use of a particular spell.";
+				break;
+			}
+			case 9: {
+				printParams += "\t\"Cast + Spell\" to cast a spell from your spellbook.";
+				break;
+			}
+			case 10: {
+				printParams += "\t\"Wait\" to pass a turn without acting.";
+				break;
+			}
+		}
+
+
+
+
 		//I made this print line by line to reduce the string length & thus memory usage(?)
 		printParams.WriteToConsole(); 
 		printParams = "";
@@ -474,6 +688,7 @@ void Game::UpdateDisplay()
 
 //The most disgusting setup you've ever seen
 //It will only get worse as time goes on. ^ This was written before I added items.
+//It has gotten so much worse. This is written after all items and guards have been implemented.
 void Game::SetupRooms()
 {
 	int* tiles00 = new int[16*16]{
@@ -497,11 +712,30 @@ void Game::SetupRooms()
 
 	rooms[0][0].m_tiles = tiles00;
 	rooms[0][0].m_items.push_back(new Coin(Vec2I(4, 1)));
-	rooms[0][0].m_items.push_back(new ManaPotion(Vec2I(1, 3)));
+	rooms[0][0].m_items.push_back(new Ham(Vec2I(7, 14)));
+	rooms[0][0].m_items.push_back(new SightPotion(Vec2I(8, 6)));
+
 	//rooms[0][0].m_items.push_back(new Door(Vec2I(12, 0))); Having a locked door was misleading to the player and only 1 was present so I got rid of it.
 	rooms[0][0].m_items.push_back(new Door(Vec2I(15, 5), false, Vec2I(1,0), Vec2I(1,5), 1));
 	rooms[0][0].m_items.push_back(new Door(Vec2I(12, 15), false, Vec2I(0,1), Vec2I(12, 1), 2));
+	
+
+	rooms[0][0].m_items.push_back(new Toilet(Vec2I(1, 6)));
+	rooms[0][0].m_items.push_back(new Toilet(Vec2I(3, 6), true));
+	rooms[0][0].m_items.push_back(new Toilet(Vec2I(5, 6)));
+
+	rooms[0][0].m_items.push_back(new Toilet(Vec2I(1, 14), true));
+	rooms[0][0].m_items.push_back(new Toilet(Vec2I(3, 14)));
+	rooms[0][0].m_items.push_back(new Toilet(Vec2I(5, 14)));
+
+	
+	//Guards
 	rooms[0][0].m_guards.push_back(new Guard(Vec2I(12, 5), 2));
+	rooms[0][0].m_guards.back()->m_patrolRoute = new Vec2I[1]{ Vec2I(12, 5) };
+	rooms[0][0].m_guards.back()->m_patrolPointCount = 1;
+
+
+
 
 	int* tiles01 = new int[16 * 16]{
 		2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
@@ -523,11 +757,23 @@ void Game::SetupRooms()
 	};
 
 	rooms[0][1].m_tiles = tiles01;
-	rooms[0][1].m_items.push_back(new Coin(Vec2I(4, 1)));
-	rooms[0][1].m_items.push_back(new ManaPotion(Vec2I(1, 3)));
-	rooms[0][1].m_items.push_back(new Door(Vec2I(0, 5), false, Vec2I(0, 0), Vec2I(14, 5), 1));
-	rooms[0][1].m_items.push_back(new Door(Vec2I(13, 15), false, Vec2I(0, 1), Vec2I(13, 1), 1));
+	rooms[0][1].m_items.push_back(new Ham(Vec2I(5, 3)));
+	rooms[0][1].m_items.push_back(new Ham(Vec2I(14, 4)));
+	rooms[0][1].m_items.push_back(new ManaPotion(Vec2I(4, 9)));
+	rooms[0][1].m_items.push_back(new SightPotion(Vec2I(3, 1)));
+	rooms[0][1].m_items.push_back(new Coin(Vec2I(6, 12)));
+	rooms[0][1].m_items.push_back(new Coin(Vec2I(1, 13)));
+	rooms[0][1].m_items.push_back(new Ham(Vec2I(14, 8)));
+	rooms[0][1].m_items.push_back(new Ham(Vec2I(13, 1)));
+	rooms[0][1].m_items.push_back(new Coin(Vec2I(12, 11)));
+
+	rooms[0][1].m_items.push_back(new Door(Vec2I(0, 5), false, Vec2I(0, 0), Vec2I(14, 5), 3));
+	rooms[0][1].m_items.push_back(new Door(Vec2I(13, 15), false, Vec2I(1, 1), Vec2I(13, 1), 2));
 	rooms[0][1].m_guards.push_back(new Guard(Vec2I(10, 12), 0));
+	rooms[0][1].m_guards.back()->m_patrolRoute = new Vec2I[4]{ Vec2I(9,13), Vec2I(9,7), Vec2I(3,7), Vec2I(3,13)}; 
+	//Okay this guy just has a super weird route. I think there's something wrong with my a*. It is a nonsense route but hey its regular so whatever.
+	rooms[0][1].m_guards.back()->m_patrolPointCount = 4;
+	
 
 	int* tiles10 = new int[16 * 16] {
 		2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,2,
@@ -554,8 +800,31 @@ void Game::SetupRooms()
 	rooms[1][0].m_items.push_back(new Door(Vec2I(15, 4), false, Vec2I(1, 1), Vec2I(1, 4), 1));
 	rooms[1][0].m_items.push_back(new Door(Vec2I(15, 9), false, Vec2I(1, 1), Vec2I(1, 9), 1));
 	//SetupExitDoorClass
-	//rooms[1, 0]->m_items.push_back(new Door(Vec2I(15, 7), false, Vec2I(0, 0), Vec2I(14, 5), 1));
-	//rooms[1, 0]->m_items.push_back(new Door(Vec2I(15, 8), false, Vec2I(0, 0), Vec2I(14, 5), 1));
+	rooms[1][0].m_items.push_back(new ExitDoor(Vec2I(8, 15)));
+	rooms[1][0].m_items.push_back(new ExitDoor(Vec2I(9, 15)));
+
+	rooms[1][0].m_items.push_back(new Diamond(Vec2I(1, 11)));
+	rooms[1][0].m_items.push_back(new ManaPotion(Vec2I(12, 8)));
+	rooms[1][0].m_items.push_back(new Coin(Vec2I(9, 13)));
+	rooms[1][0].m_items.push_back(new Ham(Vec2I(5, 8)));
+	rooms[1][0].m_items.push_back(new Coin(Vec2I(2, 7)));
+	rooms[1][0].m_items.push_back(new Coin(Vec2I(10, 2)));
+	rooms[1][0].m_items.push_back(new Diamond(Vec2I(6, 5)));
+	rooms[1][0].m_items.push_back(new SightPotion(Vec2I(1, 4)));
+	rooms[1][0].m_items.push_back(new Coin(Vec2I(6, 12)));
+
+
+	rooms[1][0].m_guards.push_back(new Guard(Vec2I(13, 9), 3));
+	rooms[1][0].m_guards.back()->m_patrolRoute = new Vec2I[1]{ Vec2I(13,9) };
+	rooms[1][0].m_guards.back()->m_patrolPointCount = 1;
+
+	rooms[1][0].m_guards.push_back(new Guard(Vec2I(9, 5), 1));
+	rooms[1][0].m_guards.back()->m_patrolRoute = new Vec2I[4]{ Vec2I(11,5), Vec2I(7,5), Vec2I(7,12), Vec2I(11,12) };
+	rooms[1][0].m_guards.back()->m_patrolPointCount = 4;
+
+	rooms[1][0].m_guards.push_back(new Guard(Vec2I(3, 8), 0));
+	rooms[1][0].m_guards.back()->m_patrolRoute = new Vec2I[2]{ Vec2I(3,3), Vec2I(3, 12) };
+	rooms[1][0].m_guards.back()->m_patrolPointCount = 2;
 
 	int* tiles11 = new int[16 * 16] {
 		2,2,2,2,2,2,2,2,2,2,2,2,2,1,2,2,
@@ -579,9 +848,32 @@ void Game::SetupRooms()
 	rooms[1][1].m_tiles = tiles11;
 
 	rooms[1][1].m_items.push_back(new Door(Vec2I(13, 0), false, Vec2I(1, 0), Vec2I(13, 14), 0));
-	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 3), false, Vec2I(0, 1), Vec2I(14, 3), 1));
-	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 4), false, Vec2I(0, 1), Vec2I(14, 4), 1));
-	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 9), false, Vec2I(0, 1), Vec2I(14, 9), 1));
+	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 3), false, Vec2I(0, 1), Vec2I(14, 3), 3));
+	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 4), false, Vec2I(0, 1), Vec2I(14, 4), 3));
+	rooms[1][1].m_items.push_back(new Door(Vec2I(0, 9), false, Vec2I(0, 1), Vec2I(14, 9), 3));
+	
+	rooms[1][1].m_items.push_back(new Diamond(Vec2I(13, 13)));
+	rooms[1][1].m_items.push_back(new Ham(Vec2I(10, 8)));
+	rooms[1][1].m_items.push_back(new Coin(Vec2I(11, 7)));
+	rooms[1][1].m_items.push_back(new Coin(Vec2I(7, 14)));
+	rooms[1][1].m_items.push_back(new Diamond(Vec2I(6, 13)));
+	rooms[1][1].m_items.push_back(new ManaPotion(Vec2I(2, 6)));
+	rooms[1][1].m_items.push_back(new Coin(Vec2I(3, 8)));
+	rooms[1][1].m_items.push_back(new SightPotion(Vec2I(3, 10)));
+	rooms[1][1].m_items.push_back(new Diamond(Vec2I(6, 13)));
+	rooms[1][1].m_items.push_back(new Ham(Vec2I(6, 8)));
+	rooms[1][1].m_items.push_back(new Coin(Vec2I(10, 2)));
+	
+	
+	
+	rooms[1][1].m_guards.push_back(new Guard(Vec2I(10, 5), 3));
+	rooms[1][1].m_guards.back()->m_patrolRoute = new Vec2I[2]{ Vec2I(9,5), Vec2I(14,5) };
+	rooms[1][1].m_guards.back()->m_patrolPointCount = 2;
+
+	rooms[1][1].m_guards.push_back(new Guard(Vec2I(4, 5), 3));
+	rooms[1][1].m_guards.back()->m_patrolRoute = new Vec2I[2]{ Vec2I(4,4), Vec2I(4,12) };
+	rooms[1][1].m_guards.back()->m_patrolPointCount = 2;
+
 }
 
 Room* Game::GetRoom(const int x, const int y) {
@@ -739,4 +1031,19 @@ bool Game::GetGuardMovementBlocked(Guard* a_guardPtr, Vec2I a_position) {
 	//	}
 	//}
 	return false;
+}
+
+void Game::EmitNoise(Vec2I a_position) {
+	for (Guard* guard : GetCurrentRoom()->m_guards) {
+		if (guard->GetState() != 4) {
+			guard->GeneratePath(a_position);
+			guard->SetState(guard->Investigating);
+		}
+	}
+}
+
+void Game::GameOver(bool failed) {
+	this->failed = failed;
+	isPlaying = false;
+
 }
