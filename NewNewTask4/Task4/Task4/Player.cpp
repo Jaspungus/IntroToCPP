@@ -61,7 +61,7 @@ String Player::ExplainSpell(String spell) {
 		output = "Teleport up to 5 tiles in front of oneself. \"An exceedly effective spell for quick transport. DO NOT USE ON BREAD.\"";
 	}
 	else if (spell.ToLower() == "turn pink") {
-		output = "Turns the caster pink. \"Functions as expected. Embarrassingly rreversible.\"";
+		output = "Turns the caster pink. \"Functions as expected. Embarrassingly irreversible.\"";
 	}
 	else if (spell.ToLower() == "yellow") {
 		output = "\"This should be obvious.\" it says.";
