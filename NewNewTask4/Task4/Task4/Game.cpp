@@ -26,7 +26,14 @@ void Game::Run() {
 	String command;
 	String commandBuffer;
 
+	//Intro sequence goes here.
 
+	commandBuffer = "You're a wizard. Your objective is to rob this place blind. In and out, no fuss.\nIt's guarded, but they're dumb as bricks so no problem if you get spotted. Just don't let them catch you.\n\nPress enter to start.\n\nAs a little note for Julian,\n\"xray\" and \"freeze\" are cheats to see everything/pause guard AI.";
+	commandBuffer.WriteToConsole();
+
+	commandBuffer.ReadFromConsole();
+
+	//Also this probably should have just returned a string. Whatever. This project is so tangled.
 	GetCurrentRoom()->Description();
 	
 
