@@ -122,7 +122,7 @@ void Game::Run() {
 
 		//Taking Item
 		//If no direction is entered it will use the direction the player is facing.
-		else if (command.Find("take") != -1 || command.Find("grab") != -1 || command.Find("pick up") != -1) {
+		else if (command.Find("take") != -1 || command.Find("grab") != -1) {
 			//If a direction is added, use that and turn player. Otherwise use player direction.
 			Vec2I direction = GetDirectionFromInput(command);
 			bool itemUsed = false;
@@ -648,7 +648,7 @@ void Game::UpdateDisplay()
 				break;
 			}
 			case 3: {
-				printParams += "\t\"Take\\Grab\\Pick up + Direction\" to collect items.";
+				printParams += "\t\"Take\\Grab + Direction\" to collect items.";
 				break;
 			}
 			case 4: {
