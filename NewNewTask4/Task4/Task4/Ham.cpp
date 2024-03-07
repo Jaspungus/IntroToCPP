@@ -8,7 +8,7 @@ Ham::Ham(Vec2I a_position)
 	colour = 167;
 	icon = String::IntToASCII(155).CharacterAt(0);;
 	//219 is also good. Annoyyed I cant use union.
-	stationary = true;
+	stationary = false;
 	value = 4;
 }
 

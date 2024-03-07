@@ -867,7 +867,6 @@ void Game::SetupRooms()
 	rooms[1][1].m_items.push_back(new ManaPotion(Vec2I(2, 6)));
 	rooms[1][1].m_items.push_back(new Coin(Vec2I(3, 8)));
 	rooms[1][1].m_items.push_back(new SightPotion(Vec2I(3, 10)));
-	rooms[1][1].m_items.push_back(new Diamond(Vec2I(6, 13)));
 	rooms[1][1].m_items.push_back(new Ham(Vec2I(6, 8)));
 	rooms[1][1].m_items.push_back(new Coin(Vec2I(10, 2)));
 	
