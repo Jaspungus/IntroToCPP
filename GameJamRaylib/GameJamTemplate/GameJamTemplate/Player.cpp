@@ -23,70 +23,112 @@ Player::~Player()
 
 void Player::OnUpdate(float deltaTime)
 {
-	m_direction = { 0,0 };
+	if (m_isLerping) {
+		m_position.x += m_lerpRate.x * deltaTime;
+		m_position.y += m_lerpRate.y * deltaTime;
 
-	if (IsKeyDown(KEY_A))
-	{
-		m_direction.x = -1;
-		//m_velocity.x -= m_acceleration * deltaTime;
-
-		//m_position.x -= m_moveSpeed * deltaTime;
-	}
-	if (IsKeyDown(KEY_D))
-	{
-		m_direction.x = 1;
-		//m_velocity.x += m_acceleration * deltaTime;
-	}
-
-	if (m_position.x < (m_game->m_gameBLCorner.x)) {
-		m_position.x = (m_game->m_gameBLCorner.x);
-	}
-
-	if (m_position.x > (m_game->m_gameTRCorner.x - m_scale.x)) {
-		m_position.x = (m_game->m_gameTRCorner.x - m_scale.x);
-	}
-
-
-	if (m_freeMovement) {
-		if (IsKeyDown(KEY_W))
-		{
-			m_direction.y = -1;
-			//m_position.y -= m_moveSpeed * deltaTime;
-			//m_velocity.y -= m_acceleration * deltaTime;
+		if (abs(m_targetPos.x - m_position.x) < 10 && abs(m_targetPos.y - m_position.y) < 10) {
+			m_position.x = m_targetPos.x;
+			m_position.y = m_targetPos.y;
+			m_isLerping = false;
+			m_freeMovement = true;
+			m_color = RED;
 		}
-		if (IsKeyDown(KEY_S))
+	}
+	else {
+		m_direction = { 0,0 };
+
+		if (IsKeyDown(KEY_A))
 		{
-			//m_position.y += m_moveSpeed * deltaTime;
-			m_direction.y = 1;
-			//m_velocity.y += m_acceleration * deltaTime;
+			m_direction.x = -1;
+			//m_velocity.x -= m_acceleration * deltaTime;
+
+			//m_position.x -= m_moveSpeed * deltaTime;
 		}
+		if (IsKeyDown(KEY_D))
+		{
+			m_direction.x = 1;
+			//m_velocity.x += m_acceleration * deltaTime;
+		}
+
+
+
+
+		if (m_freeMovement) {
+			if (IsKeyDown(KEY_W))
+			{
+				m_direction.y = -1;
+				//m_position.y -= m_moveSpeed * deltaTime;
+				//m_velocity.y -= m_acceleration * deltaTime;
+			}
+			if (IsKeyDown(KEY_S))
+			{
+				//m_position.y += m_moveSpeed * deltaTime;
+				m_direction.y = 1;
+				//m_velocity.y += m_acceleration * deltaTime;
+			}
+
+		}
+
+		m_dashTimer -= deltaTime;
+
+		if (IsKeyDown(KEY_SPACE) && (m_direction.x != 0 || m_direction.y != 0) && m_dashTimer <= 0) {
+			m_velocity.x += m_dashStrength * m_direction.x * deltaTime;
+			m_velocity.y += m_dashStrength * m_direction.y * deltaTime;
+			m_dashTimer = m_dashCooldown;
+		}
+
+		if (m_velocity.x < 0) {
+			m_velocity.x += m_deceleration * deltaTime;
+			if (m_velocity.x > 0) m_velocity.x = 0;
+		}
+		else if (m_velocity.x > 0) {
+			m_velocity.x -= m_deceleration * deltaTime;
+			if (m_velocity.x < 0) m_velocity.x = 0;
+		}
+		if (m_velocity.x < m_maxMoveSpeed)  m_velocity.x += m_acceleration * m_direction.x * deltaTime;
+		else m_velocity.x += m_deceleration * -m_direction.x * deltaTime;
+
+		if (m_velocity.y < 0) {
+			m_velocity.y += m_deceleration * deltaTime;
+			if (m_velocity.y > 0) m_velocity.y = 0;
+		}
+		else if (m_velocity.y > 0) {
+			m_velocity.y -= m_deceleration * deltaTime;
+			if (m_velocity.y < 0) m_velocity.y = 0;
+		}
+		if (m_velocity.y < m_maxMoveSpeed) m_velocity.y += m_acceleration * m_direction.y * deltaTime;
+		else m_velocity.y += m_deceleration * -m_direction.y * deltaTime;
+
+		//Update position
+
+		m_position.x += m_velocity.x;
+		m_position.y += m_velocity.y;
+
+
+		//Keep player within bounds.
+
+		if (m_position.x < (m_game->m_gameBLCorner.x)) {
+			m_position.x = (m_game->m_gameBLCorner.x);
+			m_velocity = { 0,0 };
+		}
+
+		if (m_position.x > (m_game->m_gameTRCorner.x - m_scale.x)) {
+			m_position.x = (m_game->m_gameTRCorner.x - m_scale.x);
+			m_velocity = { 0,0 };
+		}
+
 
 		if (m_position.y < (m_game->m_gameTRCorner.y)) {
 			m_position.y = (m_game->m_gameTRCorner.y);
+			m_velocity = { 0,0 };
 		}
 
 		if (m_position.y > (m_game->m_gameBLCorner.y - m_scale.y)) {
 			m_position.y = (m_game->m_gameBLCorner.y - m_scale.y);
+			m_velocity = { 0,0 };
 		}
 	}
-
-	if (IsKeyDown(KEY_SPACE)) {
-		m_velocity.x += m_dashStrength * m_direction.x * deltaTime;
-		m_velocity.y += m_dashStrength * m_direction.y * deltaTime;
-	}
-
-	m_velocity.x -= m_deceleration * m_direction.x * deltaTime;
-	if (m_velocity.x < m_maxMoveSpeed)  m_velocity.x += m_acceleration * m_direction.x * deltaTime;
-
-	m_velocity.y -= m_deceleration * m_direction.y * deltaTime;
-	if (m_velocity.y < m_maxMoveSpeed) m_velocity.y += m_acceleration * m_direction.y * deltaTime;
-
-
-
-
-	m_position.x += m_velocity.x;
-	m_position.y += m_velocity.y;
-
 	for (GameObject* go : m_game->m_root->children)
 	{
 		Watermelon* wm = dynamic_cast<Watermelon*>(go);
@@ -132,4 +174,15 @@ int Player::GetSeedCount() {
 
 void Player::EnableFreeMovement() {
 	m_freeMovement = true;
+}
+
+void Player::LerpTo(Vector2 pos, float duration) {
+	m_isLerping = true;
+	m_targetPos = pos;
+	m_lerpRate = { (pos.x - m_position.x) / duration, (pos.y - m_position.y) / duration };
+
+}
+
+bool Player::GetLerping() {
+	return m_isLerping;
 }

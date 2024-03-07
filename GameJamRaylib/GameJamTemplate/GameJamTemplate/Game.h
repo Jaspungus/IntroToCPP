@@ -50,5 +50,13 @@ private:
 
 	float m_delayDecreaseTimer = 3;
 
+
+	float m_roundTimer = 20;
+
+	int m_gameState = 0;
+	bool bordersOn = true;
+
+	Rectangle cursorRect = { 0,0,0,0 };
+	
 };
 
