@@ -125,6 +125,8 @@ void Game::Update(float deltaTime)
 
     if (m_gameState == 1) {
         
+        seedCountUI = String::IntToString(m_player->GetSeedCount());
+
         if (m_gameBLCorner.x >= m_screenTLCorner.x) 
         {
             m_gameBLCorner.x -= 110 * deltaTime;
