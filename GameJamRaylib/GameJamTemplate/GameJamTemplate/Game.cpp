@@ -4,6 +4,7 @@
 #include "EnvironmentBlock.h"
 #include "Watermelon.h"
 #include "Enemy.h"
+#include "raymath.h"
 
 Game::Game()
 {
@@ -170,30 +171,32 @@ void Game::Update(float deltaTime)
     if (m_gameState == 2) {
         m_roundTimer += deltaTime;
 
+        seedCountUI = String::IntToString(m_player->GetSeedCount());
 
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && m_player->GetSeedCount() > 0) {
 
-            std::cout << "CLICKED" << std::endl;
-            for (GameObject* go : m_root->children)
-            {
-                Enemy* e = dynamic_cast<Enemy*>(go);
-                //EnvironmentBlock* eb = dynamic_cast<EnvironmentBlock*>(go);
-                //Dont want player to check collision with itself :x
-                if (e != nullptr)
-                {
+            m_player->Shoot(Vector2Subtract(GetMousePosition(), m_camera.offset));
+            //std::cout << "CLICKED" << std::endl;
+            //for (GameObject* go : m_root->children)
+            //{
+            //    Enemy* e = dynamic_cast<Enemy*>(go);
+            //    //EnvironmentBlock* eb = dynamic_cast<EnvironmentBlock*>(go);
+            //    //Dont want player to check collision with itself :x
+            //    if (e != nullptr)
+            //    {
 
-                    if (CheckCollisionPointRec({ GetMouseX() - m_camera.offset.x, GetMouseY() - m_camera.offset.y }, go->GetGameRect()))
-                    {
-                        //For each melon you hit, add to your seed counter. 
-                        //YOU START WITH NOTHING WOW
-                         //m_game->m_root->children.erase(std::remove(m_game->m_root->children.begin(), m_game->m_root->children.end(), go));
-                        std::cout << "CLICKED AN ENEMY" << std::endl;
-                        delete e;
-                        m_root->children.erase(std::remove(m_root->children.begin(), m_root->children.end(), e));
-                        break;
-                    }
-                }
-            }
+            //        if (CheckCollisionPointRec({ GetMouseX() - m_camera.offset.x, GetMouseY() - m_camera.offset.y }, go->GetGameRect()))
+            //        {
+            //            //For each melon you hit, add to your seed counter. 
+            //            //YOU START WITH NOTHING WOW
+            //             //m_game->m_root->children.erase(std::remove(m_game->m_root->children.begin(), m_game->m_root->children.end(), go));
+            //            std::cout << "CLICKED AN ENEMY" << std::endl;
+            //            delete e;
+            //            m_root->children.erase(std::remove(m_root->children.begin(), m_root->children.end(), e));
+            //            break;
+            //        }
+            //    }
+            //}
         }
 
 
@@ -224,13 +227,14 @@ void Game::Update(float deltaTime)
             else { spawnX = 650; }
 
 
-            m_root->AddChild(new Enemy({ spawnX, spawnY }, { 25, 25 }, this));
-            m_root->AddChild(new Enemy({ 0, 0 }, { 25, 25 }, this));
+            m_root->AddChild(new Enemy({ spawnX, spawnY }, { 50, 50 }, this, m_currentFallSpeed));
+            //m_root->AddChild(new Enemy({ 0, 0 }, { 25, 25 }, this));
 
         }
-
-
-
+        if (m_gameState == 3) 
+        {
+            
+        }
 
     }
 
@@ -253,23 +257,20 @@ void Game::Draw()
     }
 
     switch (m_gameState) {
-        case 2: {
-            
+        case 3: {
+            DrawText("GAME OVER", 0, 0, 50, BLACK);
+            DrawText("THERE IS NO MENU", 0, 50, 30, BLACK);
         }
     }
 
     EndMode2D();
 
-	DrawFPS(10, 10);
-    DrawText(seedCountUI.CStr(), 10, 40, 20, WHITE);
-    DrawText(String::IntToString(m_currentFallSpeed).CStr(), 10, 70, 20, WHITE);
-    DrawText(String::IntToString(m_spawnDelay).CStr(), 10, 100, 20, WHITE);
+	//DrawFPS(10, 10);
+    DrawEllipse(15, 60, 5, 10, BLACK);
+    DrawText(seedCountUI.CStr(), 30, 40, 40, BLACK);
+
     DrawText(String::IntToString(m_roundTimer).CStr(), 590, 50, 40, BLACK);
 
-    DrawText(String::IntToString(GetMouseX()).CStr(), 10, 120, 20, WHITE);
-    DrawText(String::IntToString(GetMouseY()).CStr(), 10, 140, 20, WHITE);
-    DrawText(String::IntToString(m_camera.offset.x).CStr(), 10, 160, 20, WHITE);
-    DrawText(String::IntToString(m_camera.offset.y).CStr(), 10, 180, 20, WHITE);
 
 
 	EndDrawing();

@@ -16,6 +16,8 @@ public:
 	void LerpTo(Vector2 pos, float duration);
 	bool GetLerping();
 
+	void Shoot(Vector2 targetPos);
+
 private:
 
 	float m_maxMoveSpeed = 100;
@@ -47,5 +49,7 @@ private:
 
 
 	void UpdateRect();
+
+	
 };
 

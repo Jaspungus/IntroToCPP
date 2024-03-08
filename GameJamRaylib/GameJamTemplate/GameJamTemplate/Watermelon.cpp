@@ -51,6 +51,7 @@ void Watermelon::Destroy() {
 	
 	
 	m_game->m_root->children.erase(std::remove(m_game->m_root->children.begin(), m_game->m_root->children.end(), this));
+	delete this;
 }
 
 

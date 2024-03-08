@@ -35,7 +35,7 @@ public:
 	Vector2 m_gameTRCorner = { 200, -375 };
 	Vector2 m_gameBLCorner = { -200, 375 };
 
-	
+	int m_gameState = 0;
 
 private:
 	
@@ -53,7 +53,7 @@ private:
 
 	float m_roundTimer = 20;
 
-	int m_gameState = 0;
+	
 	bool bordersOn = true;
 
 	Rectangle cursorRect = { 0,0,0,0 };

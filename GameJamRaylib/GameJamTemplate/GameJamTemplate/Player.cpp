@@ -1,6 +1,9 @@
 #include "Player.h"
 #include "EnvironmentBlock.h"
 #include "Watermelon.h"
+#include "raymath.h"
+#include "Seed.h"
+#include "Enemy.h"
 
 Player::Player()
 {
@@ -32,10 +35,10 @@ void Player::OnUpdate(float deltaTime)
 			m_position.y = m_targetPos.y;
 			m_isLerping = false;
 			m_freeMovement = true;
-			m_color = RED;
+			//m_color = RED;
 		}
 	}
-	else {
+	else if (m_game->m_gameState == 0 || m_game->m_gameState == 2){
 		m_direction = { 0,0 };
 
 		if (IsKeyDown(KEY_A))
@@ -69,6 +72,9 @@ void Player::OnUpdate(float deltaTime)
 			}
 
 		}
+
+		//m_direction = Vector2Normalize(m_direction);
+
 
 		m_dashTimer -= deltaTime;
 
@@ -136,18 +142,25 @@ void Player::OnUpdate(float deltaTime)
 		//Dont want player to check collision with itself :x
 		if (wm != nullptr)
 		{
-			m_isColliding = CheckCollisionRecs(m_gameRect, go->GetGameRect());
-			if (m_isColliding)
+			if (CheckCollisionRecs(m_gameRect, go->GetGameRect()))
 			{
-				m_seedCount += 5; //For each melon you hit, add to your seed counter. 
+				m_seedCount += 3; //For each melon you hit, add to your seed counter. 
 				//YOU START WITH NOTHING WOW
 //m_game->m_root->children.erase(std::remove(m_game->m_root->children.begin(), m_game->m_root->children.end(), go));
 				wm->Destroy();
-
+				break;
 			}
 		}
 
-		m_isColliding = false;
+		Enemy* enemy = dynamic_cast<Enemy*>(go);
+		if (enemy != nullptr) {
+			if (CheckCollisionRecs(m_gameRect, go->GetGameRect())) {
+				m_game->m_gameState = 3;
+				break;
+			}
+		}
+
+
 	}
 
 }
@@ -185,4 +198,11 @@ void Player::LerpTo(Vector2 pos, float duration) {
 
 bool Player::GetLerping() {
 	return m_isLerping;
+}
+
+
+void Player::Shoot(Vector2 targetPos) {
+
+	m_game->m_root->AddChild(new Seed({ m_position.x + m_scale.x / 4, m_position.y + m_scale.y / 4 }, { 20,20 }, m_game, targetPos));
+	m_seedCount--;
 }

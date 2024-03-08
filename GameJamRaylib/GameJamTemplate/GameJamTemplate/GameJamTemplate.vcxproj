@@ -145,6 +145,7 @@
     <ClCompile Include="GameJamTemplate.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Seed.cpp" />
     <ClCompile Include="String.cpp" />
     <ClCompile Include="Watermelon.cpp" />
   </ItemGroup>
@@ -154,6 +155,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="Seed.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="Watermelon.h" />
   </ItemGroup>
